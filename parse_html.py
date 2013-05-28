@@ -37,6 +37,7 @@ source_raw = soup.select('.field-field-source .field-items a')
 source_clean = [source.string.strip() for source in source_raw]
 print("Source:", source_clean)
 
+
 author_raw = soup.select('.field-field-author .field-items a')
 author_clean = [author.string.strip() for author in author_raw]
 print("Author:", author_clean)
@@ -54,11 +55,25 @@ tags = [tag.string.strip() for tag in tags_raw]
 print("Tags:", tags)
 
 
+def strip_tags(html):
+  html_bs = BeautifulSoup(html)
+  html_list = html_bs.find_all(text=True)  # Get only the text from all tags
+  html_list = [chunk.strip() for chunk in html_list if chunk.strip() != '']  # Remove blank list elements
+  return(' '.join(html_list))  # Return a string of all list elements combined
+
+
 content_raw = soup.select('.pane-node-body div')
 content_clean = [str(line) for line in content_raw[0].contents if line != '\n']  # Remove list elements that are just newlines
+content_text_only = ' '.join([strip_tags(chunk) for chunk in content_clean])
 print("Content:", content_clean)
+print("Text only:", content_text_only)
 
-# TODO: URL
-# TODO: Tagless version of content
+
+# Fortunately EI used Facebook's OpenGraph, so there's a dedicated meta tag for the URL
+# Example: <meta property="og:url" content="http://www.egyptindependent.com/opinion/beyond-sectarianism">
+url = soup.find('meta', {'property':'og:url'})['content']
+print("URL:", url)
+
+
 # TODO: Make this all a class
 # TODO: Figure out best way to store all this. XML? sqlite?
