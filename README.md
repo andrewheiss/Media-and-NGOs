@@ -1,10 +1,10 @@
-# Whose Message Prevails? Independent Media Coverage of Anti-Corruption NGOs in Post-Revolutionary Egypt
+## Whose Message Prevails? Independent Media Coverage of Anti-Corruption NGOs in Post-Revolutionary Egypt
 
-### [Ken Rogerson](http://fds.duke.edu/db/Sanford/rogerson) and [Andrew Heiss](http://www.andrewheiss.com/) | Sanford School of Public Policy | Duke University
+#### [Ken Rogerson](http://fds.duke.edu/db/Sanford/rogerson) and [Andrew Heiss](http://www.andrewheiss.com/) | Sanford School of Public Policy | Duke University
 
 ------
 
-## Abstract
+### Abstract
 
 In democratic societies, the relationship between social movements and the media is asymmetrical—movements need media but media do not necessarily need to cover social movements to be successful. To gain media support for their causes, movements change their message and reframe their causes to be more palatable for media audiences. Additionally, under autocratic regimes, opposition organizations and independent media must navigate enhanced government scrutiny. This project will focus on the relationship between independent media and the nonprofit sector in autocratic societies. 
 
