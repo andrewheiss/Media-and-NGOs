@@ -27,12 +27,10 @@ if 'unknown-8bit' in encoding_output:
 #-----------------------------------------
 soup = BeautifulSoup(open(html_file,'r'))
 
-def clean_tag(tag):  # Use with map()
-  return(str(tag).strip())  # Convert to string and strip whitespace
 
 title_raw = soup.select('.pane-node-title div')
-title_clean = ' '.join(map(clean_tag, title_raw[0].contents))  # map() is kind of like lapply() in R...
-print("Title:", title_clean)
+title_clean = ' '.join([str(tag).strip() for tag in title_raw[0].contents])
+print("Title:", title_clean) 
 
 
 source_raw = soup.select('.field-field-source .field-items a')
