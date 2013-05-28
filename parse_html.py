@@ -7,7 +7,7 @@ from subprocess import check_output, call
 
 # Choose file to parse
 # TODO: Loop through all the files in a folder and do this over and over...
-html_file = 'test/zamalek-salad-bars-low-calorie-options-sweltering-ramadan-summers'
+html_file = 'test_files/beyond-sectarianism.html'
 
 
 #-------------------------
