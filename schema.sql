@@ -4,11 +4,13 @@ CREATE TABLE articles (
   "id_article" integer PRIMARY KEY,
   "article_title" text NOT NULL,
   "article_date" timestamp NOT NULL,
-  "article_content" text NOT NULL,
-  "article_content_no_tags" text NOT NULL,
   "article_url" text NOT NULL,
   "article_type" text NOT NULL,
-  "article_source" text
+  "article_content" text NOT NULL,
+  "article_content_no_tags" text NOT NULL,
+  "article_content_no_punc" text NOT NULL,
+  "article_word_count" integer NOT NULL,
+  "article_translated" integer
 );
 CREATE UNIQUE INDEX article_url_index ON articles (article_url);
 

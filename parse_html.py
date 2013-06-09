@@ -72,11 +72,11 @@ class Article:
     self.content_no_tags = content_no_tags
 
     # Just words
-    # Remove all punctuation except '-'
-    regex = re.compile('[%s]' % re.escape(string.punctuation.replace('-', '')))
-    word_list = regex.sub(' ', self.content_no_tags.lower())
-    self.word_list = word_list.split()
-    self.word_count = len(self.word_list)
+    punc = string.punctuation.replace('-', '') + '—”’“‘'  # Define punctuation
+    regex = re.compile('[%s]' % re.escape(punc))
+    content_no_punc = regex.sub(' ', self.content_no_tags.lower())  # Remove punctuation and make everything lowercase
+    self.content_no_punc = content_no_punc
+    self.word_count = len(content_no_punc.split())
 
     # Fortunately EI used Facebook's OpenGraph, so there's a dedicated meta tag for the URL
     # Example: <meta property="og:url" content="http://www.egyptindependent.com/opinion/beyond-sectarianism">
@@ -84,6 +84,7 @@ class Article:
     self.url = url
 
     self.type = "News"  # TODO: Make this more dynamic
+    self.translated = True  # TODO: Check last paragraph for translation credits
 
 
   def report(self):
@@ -94,11 +95,12 @@ class Article:
     print("Sources:", self.sources)
     print("Content:", self.content)
     print("Just text:", self.content_no_tags)
-    print("Word list:", self.word_list)
+    print("No punctuation:", self.content_no_punc)
     print("Word count:", self.word_count)
     print("URL:", self.url)
     print("Type:", self.type)
     print("Tags:", self.tags)
+    print("Translated:", self.translated)
 
 
   def _verify_encoding(self, html_file):
@@ -137,7 +139,8 @@ sys.exit()
 #   LEFT JOIN articles_authors AS B ON (A.id_article = B.fk_article)
 #   LEFT JOIN authors as C on (B.fk_author = C.id_author)
 
-conn = sqlite3.connect('egypt_independent.db')
+# PARSE_DECLTYPES so datetime works (see http://stackoverflow.com/a/4273249/120898)
+conn = sqlite3.connect('egypt_independent.db', detect_types=sqlite3.PARSE_DECLTYPES)  
 c = conn.cursor()
 # Turn on foreign keys
 c.execute("""PRAGMA foreign_keys = ON""")
@@ -206,3 +209,8 @@ conn.commit()
 # c.close()
 conn.close()
 
+
+# Text analysis poop...
+# from collections import Counter
+# word_list = content_no_punc.split()
+# self.word_list = Counter(word_list).most_common()
