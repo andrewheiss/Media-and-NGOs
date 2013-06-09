@@ -84,7 +84,7 @@ class Article:
     self.url = url
 
     self.type = "News"  # TODO: Make this more dynamic
-    self.translated = True  # TODO: Check last paragraph for translation credits
+    self.translated = False  # TODO: Check last paragraph for translation credits
 
 
   def report(self):
@@ -120,95 +120,100 @@ class Article:
     return(' '.join(html_list))  # Return a string of all list elements combined
 
 
-# Choose file to parse
 # TODO: Loop through all the files in a folder and do this over and over...
 # html_file = 'test_files/beyond-sectarianism.html'
 html_file = 'test_files/100-days-morsy-report-suggests-varied-progress-president-s-goals.html'
 # html_file = 'test_files/70-year-old-accused-raping-child-new-cairo.html'
 art1 = Article(html_file)
-art1.report()
+# art1.report()
 
 
-import sys
-sys.exit()
-
-# SQL poop...
-
-
-# SELECT A.article_title, C.author_name FROM articles AS A 
-#   LEFT JOIN articles_authors AS B ON (A.id_article = B.fk_article)
-#   LEFT JOIN authors as C on (B.fk_author = C.id_author)
-
+#---------------------------------------
+# Insert the article into the database
+#---------------------------------------
 # PARSE_DECLTYPES so datetime works (see http://stackoverflow.com/a/4273249/120898)
 conn = sqlite3.connect('egypt_independent.db', detect_types=sqlite3.PARSE_DECLTYPES)  
 c = conn.cursor()
+
 # Turn on foreign keys
 c.execute("""PRAGMA foreign_keys = ON""")
 
-
-
 # Insert article
 c.execute("""INSERT OR IGNORE INTO articles 
-  (article_title, article_date, article_content, article_content_no_tags, article_url, article_type) 
-  VALUES (?, ?, ?, ?, ?, ?)""", 
-  (title_clean, date_object, "\n".join(content_clean), content_no_tags, url, article_type))
-article_id = c.lastrowid
-print(article_id)
+  (article_title, article_date, article_url, article_type, 
+    article_content, article_content_no_tags, 
+    article_content_no_punc, article_word_count, article_translated) 
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
+  (art1.title, art1.date, art1.url, art1.type, 
+    art1.content, art1.content_no_tags, 
+    art1.content_no_punc, art1.word_count, art1.translated))
+c.execute("""SELECT id_article FROM articles WHERE article_url = ?""", [art1.url])
+article_in_db = c.fetchall()
+article_id = article_in_db[0][0]
 
-authors = author_clean
-sources = source_clean
 
 # Insert author(s)
 c.executemany("""INSERT OR IGNORE INTO authors (author_name) 
   VALUES (?)""", 
-  [(author, ) for author in authors])
+  [(author, ) for author in art1.authors])
 
 # Get the ids of all the authors
 c.execute("""SELECT id_author FROM authors 
-  WHERE author_name IN ({0})""".format(', '.join('?' for _ in authors)), authors)
+  WHERE author_name IN ({0})""".format(', '.join('?' for _ in art1.authors)), art1.authors)
 authors_in_db = c.fetchall()
 author_ids = [author[0] for author in authors_in_db]
-print(author_ids)
-
-
-# Insert tag(s)
-c.executemany("""INSERT OR IGNORE INTO tags (tag_name) 
-  VALUES (?)""", 
-  [(tag, ) for tag in tags])
-
-# Get the ids of all the tags
-c.execute("""SELECT id_tag FROM tags 
-  WHERE tag_name IN ({0})""".format(', '.join('?' for _ in tags)), tags)
-tags_in_db = c.fetchall()
-tag_ids = [tag[0] for tag in tags_in_db]
-print(tag_ids)
 
 
 # Insert source(s)
 c.executemany("""INSERT OR IGNORE INTO sources (source_name) 
   VALUES (?)""", 
-  [(source, ) for source in sources])
+  [(source, ) for source in art1.sources])
 
 # Get the ids of all the sources
 c.execute("""SELECT id_source FROM sources 
-  WHERE source_name IN ({0})""".format(', '.join('?' for _ in sources)), sources)
+  WHERE source_name IN ({0})""".format(', '.join('?' for _ in art1.sources)), art1.sources)
 sources_in_db = c.fetchall()
 source_ids = [source[0] for source in sources_in_db]
-print(source_ids)
 
 
+# Insert tag(s)
+c.executemany("""INSERT OR IGNORE INTO tags (tag_name) 
+  VALUES (?)""", 
+  [(tag, ) for tag in art1.tags])
+
+# Get the ids of all the tags
+c.execute("""SELECT id_tag FROM tags 
+  WHERE tag_name IN ({0})""".format(', '.join('?' for _ in art1.tags)), art1.tags)
+tags_in_db = c.fetchall()
+tag_ids = [tag[0] for tag in tags_in_db]
 
 
-# # Insert the mapping
-# c.execute("""INSERT INTO articles_authors 
-#   (fk_article, fk_author) 
-#   VALUES (?, ?)""",
-#   (article_id, author_id))
+# Insert ids into junction tables
+c.executemany("""INSERT OR IGNORE INTO articles_sources 
+  (fk_article, fk_source) 
+  VALUES (?, ?)""",
+  ([(article_id, source) for source in source_ids]))
 
+c.executemany("""INSERT OR IGNORE INTO articles_authors
+  (fk_article, fk_author) 
+  VALUES (?, ?)""",
+  ([(article_id, author) for author in author_ids]))
+
+c.executemany("""INSERT OR IGNORE INTO articles_tags
+  (fk_article, fk_tag) 
+  VALUES (?, ?)""",
+  ([(article_id, tag) for tag in tag_ids]))
+
+# Close everything up
 conn.commit()
-# c.close()
+c.close()
 conn.close()
 
+
+# SQL poop...
+# SELECT A.article_title, C.author_name FROM articles AS A 
+#   LEFT JOIN articles_authors AS B ON (A.id_article = B.fk_article)
+#   LEFT JOIN authors as C on (B.fk_author = C.id_author)
 
 # Text analysis poop...
 # from collections import Counter
