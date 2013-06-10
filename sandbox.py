@@ -1,32 +1,11 @@
 #!/usr/bin/env python3
-# Import modules
-import sqlite3
 
-conn = sqlite3.connect(':memory:')
-c = conn.cursor()
+# SQL poop...
+# SELECT A.article_title, C.author_name FROM articles AS A 
+#   LEFT JOIN articles_authors AS B ON (A.id_article = B.fk_article)
+#   LEFT JOIN authors as C on (B.fk_author = C.id_author)
 
-# Create sample database
-c.execute("""CREATE TABLE authors (
-  "id_author" integer PRIMARY KEY,
-  "author_name" text NOT NULL
-);""")
-c.execute("""CREATE UNIQUE INDEX author_index ON authors (author_name);""")
-
-# List of data to insert
-authors = ['Sally', 'Fred', 'Jim']
-
-# Insert everything
-c.executemany("""INSERT OR IGNORE INTO authors (author_name) 
-  VALUES (?)""", 
-  [(author, ) for author in authors])  # Seems really convoluted
-
-# Get the ids of all the authors
-# The .format(.join()) combination adds the proper number of ?s to the SQL statement
-c.execute("""SELECT id_author FROM authors 
-  WHERE author_name IN ({0})""".format(', '.join('?' for _ in authors)), authors)
-authors_in_db = c.fetchall()
-author_ids = [author[0] for author in authors_in_db]
-print(author_ids)
-
-conn.commit()
-conn.close()
+# Text analysis poop...
+# from collections import Counter
+# word_list = content_no_punc.split()
+# self.word_list = Counter(word_list).most_common()

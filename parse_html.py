@@ -1,5 +1,30 @@
 #!/usr/bin/env python3
 
+# Title:          parse_html.py
+# Description:    Loop through a directory of HTML files, parse their content with 
+#                 BeautifulSoup, and insert the resultant data into an SQLite database.
+# Author:         Andrew Heiss
+# Last updated:   2013-06-10
+# Python version: ≥3.0
+# Usage:          Edit the two variables below and run the script
+#                 Manual hand-holding: a few files don't convert properly to UTF-8
+#                                      a few files have '(All day)' instead of a time
+#                                      at least one file doesn't use Drupal views and is missing classes for parsing
+#                                      the script chokes on folders (like /news/ and /taxonomy/)
+
+#--------------------
+# Configure parsing
+#--------------------
+database = 'egypt_independent.db'  # Create this beforehand; schema is in `schema.sql`
+files_to_parse = 'test_files/*'  # Needs * to work properly
+
+
+#---------------------------------------------------------------------
+#---------------------------------------------------------------------
+# Do the actual parsing. You shouldn't need to edit below this line.
+#---------------------------------------------------------------------
+#---------------------------------------------------------------------
+
 # Import modules
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -7,6 +32,7 @@ from subprocess import check_output, call
 import string
 import sqlite3
 import re
+import glob
 
 
 #----------------------
@@ -22,16 +48,22 @@ class Article:
     sources: List of source(s) (mostly for articles translated from al-Masry al-Youm Arabic)
     content: HTML content as string
     content_no_tags: Tag-free version of HTML content as string
-    word_list: List of all words in the articles_authors
-    word_count: Lenght of `word_list`
+    content_no_punc: Punctuation-free, lowercase version of content as string
+    word_count: Length of `word_list`
     url: URL as string
     type: Type of article (news or opinion) as string
     tags: List of tag(s)
+    translated: Boolean indicating whether the article is a translation
 
   Returns:
     A new article object
   """
   def __init__(self, html_file):
+    """Create the article object
+
+    Arguments:
+      html_file: String of path to file to be parsed
+    """
     self._verify_encoding(html_file)
     self._extract_fields(html_file)
 
@@ -40,29 +72,34 @@ class Article:
     """Extract elements of the article using BeautifulSoup"""
     soup = BeautifulSoup(open(html_file,'r'))
 
+    # Title
     title_raw = soup.select('.pane-node-title div')
     title_clean = ' '.join([str(tag).strip() for tag in title_raw[0].contents])
     self.title = title_clean
 
+    # Source
     source_raw = soup.select('.field-field-source .field-items a')
     source_clean = [source.string.strip() for source in source_raw]
     self.sources = source_clean
 
+    # Author
     author_raw = soup.select('.field-field-author .field-items a')
     author_clean = [author.string.strip() for author in author_raw]
     self.authors = author_clean
 
+    # Date
     date_raw = soup.select('.field-field-published-date span')
     date_clean = date_raw[0].string.strip()
     # strptime() defines a date format for conversion into an actual date object
     date_object = datetime.strptime(date_clean, '%a, %d/%m/%Y - %H:%M')
     self.date = date_object
 
+    # Tags
     tags_raw = soup.select('.view-free-tags .field-content a')
-    tags = [tag.string.strip() for tag in tags_raw]
+    tags = [tag.string.strip().lower() for tag in tags_raw]
     self.tags = tags
 
-    # Regular HTML content
+    # Content
     content_raw = soup.select('.pane-node-body div')
     content_clean = [str(line) for line in content_raw[0].contents if line != '\n']  # Remove list elements that are just newlines
     self.content = "\n".join(content_clean)
@@ -71,20 +108,26 @@ class Article:
     content_no_tags = ' '.join([self._strip_tags(chunk) for chunk in content_clean])
     self.content_no_tags = content_no_tags
 
-    # Just words
+    # Just words and word count
     punc = string.punctuation.replace('-', '') + '—”’“‘'  # Define punctuation
     regex = re.compile('[%s]' % re.escape(punc))
     content_no_punc = regex.sub(' ', self.content_no_tags.lower())  # Remove punctuation and make everything lowercase
     self.content_no_punc = content_no_punc
     self.word_count = len(content_no_punc.split())
 
+    # URL
     # Fortunately EI used Facebook's OpenGraph, so there's a dedicated meta tag for the URL
     # Example: <meta property="og:url" content="http://www.egyptindependent.com/opinion/beyond-sectarianism">
     url = soup.find('meta', {'property':'og:url'})['content']
     self.url = url
 
-    self.type = "News"  # TODO: Make this more dynamic
-    self.translated = False  # TODO: Check last paragraph for translation credits
+    # Type
+    # Determine the articule type based on the URL (opinion or news)
+    self.type = 'Opinion' if '/opinion/' in self.url else 'News'
+
+    # Translation
+    # Look at the last paragraph of the article to see if it says "translated," "translation," etc.
+    self.translated = True if 'translat' in content_clean[-1] else False
 
 
   def report(self):
@@ -101,6 +144,83 @@ class Article:
     print("Type:", self.type)
     print("Tags:", self.tags)
     print("Translated:", self.translated)
+
+
+  def write_to_db(self, conn, c):
+    """Write the article object to the database
+
+    Arguments:
+      conn = sqlite3 databse connection
+      c = sqlite3 database cursor on `conn`
+    """
+    # Insert article
+    c.execute("""INSERT OR IGNORE INTO articles 
+      (article_title, article_date, article_url, article_type, 
+        article_content, article_content_no_tags, 
+        article_content_no_punc, article_word_count, article_translated) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
+      (self.title, self.date, self.url, self.type, 
+        self.content, self.content_no_tags, 
+        self.content_no_punc, self.word_count, self.translated))
+    c.execute("""SELECT id_article FROM articles WHERE article_url = ?""", [self.url])
+    article_in_db = c.fetchall()
+    article_id = article_in_db[0][0]
+
+
+    # Insert author(s)
+    c.executemany("""INSERT OR IGNORE INTO authors (author_name) 
+      VALUES (?)""", 
+      [(author, ) for author in self.authors])
+
+    # Get the ids of all the authors
+    c.execute("""SELECT id_author FROM authors 
+      WHERE author_name IN ({0})""".format(', '.join('?' for _ in self.authors)), self.authors)
+    authors_in_db = c.fetchall()
+    author_ids = [author[0] for author in authors_in_db]
+
+
+    # Insert source(s)
+    c.executemany("""INSERT OR IGNORE INTO sources (source_name) 
+      VALUES (?)""", 
+      [(source, ) for source in self.sources])
+
+    # Get the ids of all the sources
+    c.execute("""SELECT id_source FROM sources 
+      WHERE source_name IN ({0})""".format(', '.join('?' for _ in self.sources)), self.sources)
+    sources_in_db = c.fetchall()
+    source_ids = [source[0] for source in sources_in_db]
+
+
+    # Insert tag(s)
+    c.executemany("""INSERT OR IGNORE INTO tags (tag_name) 
+      VALUES (?)""", 
+      [(tag, ) for tag in self.tags])
+
+    # Get the ids of all the tags
+    c.execute("""SELECT id_tag FROM tags 
+      WHERE tag_name IN ({0})""".format(', '.join('?' for _ in self.tags)), self.tags)
+    tags_in_db = c.fetchall()
+    tag_ids = [tag[0] for tag in tags_in_db]
+
+
+    # Insert ids into junction tables
+    c.executemany("""INSERT OR IGNORE INTO articles_sources 
+      (fk_article, fk_source) 
+      VALUES (?, ?)""",
+      ([(article_id, source) for source in source_ids]))
+
+    c.executemany("""INSERT OR IGNORE INTO articles_authors
+      (fk_article, fk_author) 
+      VALUES (?, ?)""",
+      ([(article_id, author) for author in author_ids]))
+
+    c.executemany("""INSERT OR IGNORE INTO articles_tags
+      (fk_article, fk_tag) 
+      VALUES (?, ?)""",
+      ([(article_id, tag) for tag in tag_ids]))
+
+    # Close everything up
+    conn.commit()
 
 
   def _verify_encoding(self, html_file):
@@ -120,102 +240,26 @@ class Article:
     return(' '.join(html_list))  # Return a string of all list elements combined
 
 
-# TODO: Loop through all the files in a folder and do this over and over...
-# html_file = 'test_files/beyond-sectarianism.html'
-html_file = 'test_files/100-days-morsy-report-suggests-varied-progress-president-s-goals.html'
-# html_file = 'test_files/70-year-old-accused-raping-child-new-cairo.html'
-art1 = Article(html_file)
-# art1.report()
-
-
-#---------------------------------------
-# Insert the article into the database
-#---------------------------------------
+#----------------------------------------
+# Insert the articles into the database
+#----------------------------------------
+# Connect to the database
 # PARSE_DECLTYPES so datetime works (see http://stackoverflow.com/a/4273249/120898)
-conn = sqlite3.connect('egypt_independent.db', detect_types=sqlite3.PARSE_DECLTYPES)  
+conn = sqlite3.connect(database, detect_types=sqlite3.PARSE_DECLTYPES)  
 c = conn.cursor()
 
 # Turn on foreign keys
 c.execute("""PRAGMA foreign_keys = ON""")
 
-# Insert article
-c.execute("""INSERT OR IGNORE INTO articles 
-  (article_title, article_date, article_url, article_type, 
-    article_content, article_content_no_tags, 
-    article_content_no_punc, article_word_count, article_translated) 
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
-  (art1.title, art1.date, art1.url, art1.type, 
-    art1.content, art1.content_no_tags, 
-    art1.content_no_punc, art1.word_count, art1.translated))
-c.execute("""SELECT id_article FROM articles WHERE article_url = ?""", [art1.url])
-article_in_db = c.fetchall()
-article_id = article_in_db[0][0]
+# Get list of files and remove all duplicate `?quicktabs_ei_multimedia_block=x` files
+file_list = glob.glob(files_to_parse)
+clean_file_list = [html_file for html_file in file_list if 'quicktabs_ei_multimedia_block' not in html_file]
 
+# Loop through the list, parse each file, and write it to the database
+for html_file in clean_file_list:
+  article = Article(html_file)
+  article.write_to_db(conn, c)
 
-# Insert author(s)
-c.executemany("""INSERT OR IGNORE INTO authors (author_name) 
-  VALUES (?)""", 
-  [(author, ) for author in art1.authors])
-
-# Get the ids of all the authors
-c.execute("""SELECT id_author FROM authors 
-  WHERE author_name IN ({0})""".format(', '.join('?' for _ in art1.authors)), art1.authors)
-authors_in_db = c.fetchall()
-author_ids = [author[0] for author in authors_in_db]
-
-
-# Insert source(s)
-c.executemany("""INSERT OR IGNORE INTO sources (source_name) 
-  VALUES (?)""", 
-  [(source, ) for source in art1.sources])
-
-# Get the ids of all the sources
-c.execute("""SELECT id_source FROM sources 
-  WHERE source_name IN ({0})""".format(', '.join('?' for _ in art1.sources)), art1.sources)
-sources_in_db = c.fetchall()
-source_ids = [source[0] for source in sources_in_db]
-
-
-# Insert tag(s)
-c.executemany("""INSERT OR IGNORE INTO tags (tag_name) 
-  VALUES (?)""", 
-  [(tag, ) for tag in art1.tags])
-
-# Get the ids of all the tags
-c.execute("""SELECT id_tag FROM tags 
-  WHERE tag_name IN ({0})""".format(', '.join('?' for _ in art1.tags)), art1.tags)
-tags_in_db = c.fetchall()
-tag_ids = [tag[0] for tag in tags_in_db]
-
-
-# Insert ids into junction tables
-c.executemany("""INSERT OR IGNORE INTO articles_sources 
-  (fk_article, fk_source) 
-  VALUES (?, ?)""",
-  ([(article_id, source) for source in source_ids]))
-
-c.executemany("""INSERT OR IGNORE INTO articles_authors
-  (fk_article, fk_author) 
-  VALUES (?, ?)""",
-  ([(article_id, author) for author in author_ids]))
-
-c.executemany("""INSERT OR IGNORE INTO articles_tags
-  (fk_article, fk_tag) 
-  VALUES (?, ?)""",
-  ([(article_id, tag) for tag in tag_ids]))
-
-# Close everything up
-conn.commit()
+# CLose everything up
 c.close()
 conn.close()
-
-
-# SQL poop...
-# SELECT A.article_title, C.author_name FROM articles AS A 
-#   LEFT JOIN articles_authors AS B ON (A.id_article = B.fk_article)
-#   LEFT JOIN authors as C on (B.fk_author = C.id_author)
-
-# Text analysis poop...
-# from collections import Counter
-# word_list = content_no_punc.split()
-# self.word_list = Counter(word_list).most_common()
