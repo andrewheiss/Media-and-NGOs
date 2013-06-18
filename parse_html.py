@@ -16,7 +16,7 @@
 # Configure parsing
 #--------------------
 database = 'egypt_independent.db'  # Create this beforehand; schema is in `schema.sql`
-files_to_parse = 'test_files/*'  # Needs * to work properly
+files_to_parse = 'ahram_test/*'  # Needs * to work properly
 
 
 #---------------------------------------------------------------------
@@ -29,6 +29,7 @@ files_to_parse = 'test_files/*'  # Needs * to work properly
 from bs4 import BeautifulSoup
 from datetime import datetime
 from subprocess import check_output, call
+from itertools import groupby
 import string
 import sqlite3
 import re
@@ -65,10 +66,10 @@ class Article:
       html_file: String of path to file to be parsed
     """
     self._verify_encoding(html_file)
-    self._extract_fields(html_file)
+    self._extract_fields_ahram(html_file)
 
 
-  def _extract_fields(self, html_file):
+  def _extract_fields_egind(self, html_file):
     """Extract elements of the article using BeautifulSoup"""
     soup = BeautifulSoup(open(html_file,'r'))
 
@@ -105,7 +106,7 @@ class Article:
     self.content = "\n".join(content_clean)
 
     # Tag-free content
-    content_no_tags = ' '.join([self._strip_tags(chunk) for chunk in content_clean])
+    content_no_tags = ' '.join([self._strip_all_tags(chunk) for chunk in content_clean])
     self.content_no_tags = content_no_tags
 
     # Just words and word count
@@ -130,20 +131,136 @@ class Article:
     self.translated = True if 'translat' in content_clean[-1] else False
 
 
+  def _extract_fields_ahram(self, html_file):
+    """Extract elements of the article using BeautifulSoup"""
+    soup = BeautifulSoup(open(html_file,'r'))
+
+    # Title
+    title_raw = soup.select('#ContentPlaceHolder1_hd')
+    title_clean = ' '.join([str(tag).strip() for tag in title_raw[0].contents])
+    self.title = self._strip_all_tags(title_clean)
+
+    # Parse sources and date
+    source_and_date_blob = soup.select('#ContentPlaceHolder1_source')
+    source_and_date = ' '.join([str(tag).strip() for tag in source_and_date_blob[0].contents])
+    source_and_date_split = source_and_date.split(', ')
+
+    # Source
+    self.sources = [source_and_date_split[0]]
+    self.authors = None
+
+    # Date
+    date_clean = source_and_date_split[1]
+
+
+    # Source
+    # source_raw = soup.select('.field-field-source .field-items a')
+    # source_clean = [source.string.strip() for source in source_raw]
+    # self.sources = source_clean
+
+    # Author
+    # author_raw = soup.select('.field-field-author .field-items a')
+    # author_clean = [author.string.strip() for author in author_raw]
+    # self.authors = author_clean
+
+    # Date
+    # date_raw = soup.select('.field-field-published-date span')
+    # date_clean = date_raw[0].string.strip()
+    # # strptime() defines a date format for conversion into an actual date object
+    # date_object = datetime.strptime(date_clean, '%a, %d/%m/%Y - %H:%M')
+    # self.date = date_object
+
+
+    # Content
+    # Al-Ahram sticks all their content and tag metadata in the same messy div. 
+    # This collects the whole mess into content_blob_raw, cleans it up, and then splits 
+    # the list into two chunks for futher cleaning and processing.
+    content_blob_raw = soup.select('#ContentPlaceHolder1_divContent')
+    
+    # Remove list elements that aren't newlines and remove all extra newlines and tabs
+    trans_table = {'\n': None, '\t': None, '\xa0': ' '}  # Define which characters to remove
+    content_blob = [str(line).translate(str.maketrans(trans_table)) for line in content_blob_raw[0].contents if line != '\n']
+
+    # Split the list using the 'Short link: ' text (via
+    # http://stackoverflow.com/a/14529615/120898) There should be two parts,
+    # the content (plus tags, if they exist) and the short link input field.
+    # It would be easier to use the line_inner_AfterTopic div as the divider,
+    # but not all pages have that (curse you proprietary ASP CMS), so instead
+    # this uses the "Short link: " text as the divider. The tag section is
+    # then extracted from the content using BeautifulSoup.
+    content_blob_split_iter = groupby(content_blob, lambda x: x == 'Short link: ')
+    content_blob_split = [list(group) for k, group in content_blob_split_iter if not k]
+
+    content_raw = content_blob_split[0]
+    url_raw = content_blob_split[1]
+
+    # Extract keywords from content
+    content_soup = BeautifulSoup('\n'.join(content_raw))
+    tags_raw = content_soup.select('.search_word')
+    [tag.extract() for tag in tags_raw]
+
+    # Clean content
+    content_raw = [str(line) for line in content_soup.contents if line != '\n']  # Get raw contents
+    content_clean = [self._strip_extra_tags(chunk) for chunk in content_raw]  # Clean tags
+    content_clean = [chunk for chunk in content_clean if chunk != '']  # Remove empty items
+    self.content = content_clean
+    
+    # TODO: Remove Word HTML crap ([if gte mso 9]><xml> <o:DocumentProperties>  <o:Revision>0</o:Revision>, etc.)
+
+    # Tag-free content
+    content_no_tags = ' '.join([self._strip_all_tags(chunk) for chunk in content_clean])
+    self.content_no_tags = content_no_tags
+
+    # Just words and word count
+    punc = string.punctuation.replace('-', '') + '—”’“‘'  # Define punctuation
+    regex = re.compile('[%s]' % re.escape(punc))
+    content_no_punc = regex.sub(' ', self.content_no_tags.lower())  # Remove punctuation and make everything lowercase
+    self.content_no_punc = content_no_punc
+    self.word_count = len(content_no_punc.split())
+
+
+    # TODO: The rest of this stuff
+    # Tags
+
+    # tags_raw
+
+    # tags_raw = soup.select('.view-free-tags .field-content a')
+    # tags = [tag.string.strip().lower() for tag in tags_raw]
+    # self.tags = tags
+
+
+    # URL
+    # Fortunately EI used Facebook's OpenGraph, so there's a dedicated meta tag for the URL
+    # Example: <meta property="og:url" content="http://www.egyptindependent.com/opinion/beyond-sectarianism">
+
+    # url_raw
+    
+    # url = soup.find('meta', {'property':'og:url'})['content']
+    # self.url = url
+
+    # Type
+    # Determine the articule type based on the URL (opinion or news)
+    # self.type = 'Opinion' if '/opinion/' in self.url else 'News'
+
+    # Translation
+    # Look at the last paragraph of the article to see if it says "translated," "translation," etc.
+    # self.translated = True if 'translat' in content_clean[-1] else False
+
+
   def report(self):
     """Print out everything (for testing purposes)"""
     print("Title:", self.title)
-    print("Date:", self.date)
+    # print("Date:", self.date)
     print("Authors:", self.authors)
     print("Sources:", self.sources)
     print("Content:", self.content)
     print("Just text:", self.content_no_tags)
     print("No punctuation:", self.content_no_punc)
     print("Word count:", self.word_count)
-    print("URL:", self.url)
-    print("Type:", self.type)
-    print("Tags:", self.tags)
-    print("Translated:", self.translated)
+    # print("URL:", self.url)
+    # print("Type:", self.type)
+    # print("Tags:", self.tags)
+    # print("Translated:", self.translated)
 
 
   def write_to_db(self, conn, c):
@@ -232,12 +349,19 @@ class Article:
       fp.close()
 
 
-  def _strip_tags(self, html):
+  def _strip_all_tags(self, html):
     """Remove all HTML tags from the given string"""
     html_bs = BeautifulSoup(html)
     html_list = html_bs.find_all(text=True)  # Get only the text from all tags
     html_list = [chunk.strip() for chunk in html_list if chunk.strip() != '']  # Remove blank list elements
     return(' '.join(html_list))  # Return a string of all list elements combined
+
+  def _strip_extra_tags(self, html):
+    """Remove all HTML tags from the given string"""
+    html_bs = BeautifulSoup(html)
+    to_extract = html_bs.find_all(['script', 'br', 'div'])  # Choose tags to extract
+    [item.extract() for item in to_extract]  # Get rid of extraneous tags
+    return(str(html_bs))  # Return string of original HTML
 
 
 #----------------------------------------
@@ -245,21 +369,27 @@ class Article:
 #----------------------------------------
 # Connect to the database
 # PARSE_DECLTYPES so datetime works (see http://stackoverflow.com/a/4273249/120898)
-conn = sqlite3.connect(database, detect_types=sqlite3.PARSE_DECLTYPES)  
-c = conn.cursor()
+# conn = sqlite3.connect(database, detect_types=sqlite3.PARSE_DECLTYPES)  
+# c = conn.cursor()
 
 # Turn on foreign keys
-c.execute("""PRAGMA foreign_keys = ON""")
+# c.execute("""PRAGMA foreign_keys = ON""")
 
 # Get list of files and remove all duplicate `?quicktabs_ei_multimedia_block=x` files
 file_list = glob.glob(files_to_parse)
 clean_file_list = [html_file for html_file in file_list if 'quicktabs_ei_multimedia_block' not in html_file]
 
 # Loop through the list, parse each file, and write it to the database
-for html_file in clean_file_list:
-  article = Article(html_file)
-  article.write_to_db(conn, c)
+# for html_file in clean_file_list:
+#   print('\n'+html_file)
+#   article = Article(html_file)
+#   article.report()
+  # article.write_to_db(conn, c)
 
 # CLose everything up
-c.close()
-conn.close()
+# c.close()
+# conn.close()
+# html_file = "ahram_test/13148.aspx"
+html_file = "ahram_test/26895.aspx"
+article = Article(html_file)
+# article.report()
