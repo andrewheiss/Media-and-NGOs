@@ -4,19 +4,21 @@
 # Description:    Loop through a directory of HTML files, parse their content with 
 #                 BeautifulSoup, and insert the resultant data into an SQLite database.
 # Author:         Andrew Heiss
-# Last updated:   2013-06-10
+# Last updated:   2013-07-01
 # Python version: ≥3.0
 # Usage:          Edit the two variables below and run the script
-#                 Manual hand-holding: a few files don't convert properly to UTF-8
-#                                      a few files have '(All day)' instead of a time
-#                                      at least one file doesn't use Drupal views and is missing classes for parsing
-#                                      the script chokes on folders (like /news/ and /taxonomy/)
+# Issues:         Egypt Independent: 
+#                   * a few files have '(All day)' instead of a time
+#                   * a few files didn't actually finish downloading
+#                   * a couple articles have Word HTML cruft that I don't automatically 
+#                     filter out. Fix them manually in the SQLite database.
+#                     (Find them with: SELECT * FROM articles WHERE article_content LIKE "%if gte%")
 
 #--------------------
 # Configure parsing
 #--------------------
 database = 'egypt_independent.db'  # Create this beforehand; schema is in `schema.sql`
-files_to_parse = 'ahram_test/*'  # Needs * to work properly
+files_to_parse = 'egind_clean/*'  # Needs * to work properly
 
 
 #---------------------------------------------------------------------
@@ -65,8 +67,8 @@ class Article:
     Arguments:
       html_file: String of path to file to be parsed
     """
-    self._verify_encoding(html_file)
-    self._extract_fields_ahram(html_file)
+    # self._verify_encoding(html_file)  # Not needed for files downloaded with httrack!
+    self._extract_fields_egind(html_file)
 
 
   def _extract_fields_egind(self, html_file):
@@ -106,7 +108,7 @@ class Article:
     self.content = "\n".join(content_clean)
 
     # Tag-free content
-    content_no_tags = ' '.join([self._strip_all_tags(chunk) for chunk in content_clean])
+    content_no_tags = '\n'.join([self._strip_all_tags(chunk) for chunk in content_clean])
     self.content_no_tags = content_no_tags
 
     # Just words and word count
@@ -203,7 +205,7 @@ class Article:
     content_raw = [str(line) for line in content_soup.contents if line != '\n']  # Get raw contents
     content_clean = [self._strip_extra_tags(chunk) for chunk in content_raw]  # Clean tags
     content_clean = [chunk for chunk in content_clean if chunk != '']  # Remove empty items
-    self.content = content_clean
+    self.content = "\n".join(content_clean)
     
     # TODO: Remove Word HTML crap ([if gte mso 9]><xml> <o:DocumentProperties>  <o:Revision>0</o:Revision>, etc.)
 
@@ -369,27 +371,19 @@ class Article:
 #----------------------------------------
 # Connect to the database
 # PARSE_DECLTYPES so datetime works (see http://stackoverflow.com/a/4273249/120898)
-# conn = sqlite3.connect(database, detect_types=sqlite3.PARSE_DECLTYPES)  
-# c = conn.cursor()
+conn = sqlite3.connect(database, detect_types=sqlite3.PARSE_DECLTYPES)  
+c = conn.cursor()
 
 # Turn on foreign keys
-# c.execute("""PRAGMA foreign_keys = ON""")
-
-# Get list of files and remove all duplicate `?quicktabs_ei_multimedia_block=x` files
-file_list = glob.glob(files_to_parse)
-clean_file_list = [html_file for html_file in file_list if 'quicktabs_ei_multimedia_block' not in html_file]
+c.execute("""PRAGMA foreign_keys = ON""")
 
 # Loop through the list, parse each file, and write it to the database
-# for html_file in clean_file_list:
-#   print('\n'+html_file)
-#   article = Article(html_file)
-#   article.report()
-  # article.write_to_db(conn, c)
+for html_file in [html_file for html_file in glob.glob(files_to_parse)]:
+  # print('\n'+html_file)
+  article = Article(html_file)
+  # article.report()
+  article.write_to_db(conn, c)
 
 # CLose everything up
-# c.close()
-# conn.close()
-# html_file = "ahram_test/13148.aspx"
-html_file = "ahram_test/26895.aspx"
-article = Article(html_file)
-# article.report()
+c.close()
+conn.close()
