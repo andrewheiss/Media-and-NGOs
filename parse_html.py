@@ -142,39 +142,33 @@ class Article:
     title_clean = ' '.join([str(tag).strip() for tag in title_raw[0].contents])
     self.title = self._strip_all_tags(title_clean)
 
-    # Parse sources and date
+    # Parse date and sources
     source_and_date_blob = soup.select('#ContentPlaceHolder1_source')
     source_and_date = ' '.join([str(tag).strip() for tag in source_and_date_blob[0].contents])
-    source_and_date_split = source_and_date.split(', ')
+
+    # Stupid non-semantic al-Ahram doesn't do this consistently. Some sources
+    # are separated by commas, some by 'and', and some even by two spaces. But
+    # an 'and' within parentheses doesn't count, so that has to be taken into
+    # account someday. TODO: Ignore 'and's in parentheses
+    source_and_date_split = re.split(',|and|  ', source_and_date)
+
+    # Date
+    # The date is the last element of the list
+    date_clean = source_and_date_split.pop().strip()  
+    # strptime() defines a date format for conversion into an actual date object
+    date_object = datetime.strptime(date_clean, '%A %d %b %Y')
+    self.date = date_object
+
 
     # Source
-    self.sources = [source_and_date_split[0]]
+    source_clean = [source.strip() for source in source_and_date_split]  # Anything that's left is a source
+    self.sources = source_clean
+    print(self.sources)
     self.authors = None
 
-    # Date
-    date_clean = source_and_date_split[1]
     # TODO: Handle multiple or complex sources, maybe search string backwards to get date
     # TODO: Find missing articles
 
-
-    # Source
-    # source_raw = soup.select('.field-field-source .field-items a')
-    # source_clean = [source.string.strip() for source in source_raw]
-    # self.sources = source_clean
-
-    # Author
-    # author_raw = soup.select('.field-field-author .field-items a')
-    # author_clean = [author.string.strip() for author in author_raw]
-    # self.authors = author_clean
-    # TODO: Handle multiple or complex sources, maybe search string backwards to get date
-    # TODO: Find missing articles
-
-    # Date
-    # date_raw = soup.select('.field-field-published-date span')
-    # date_clean = date_raw[0].string.strip()
-    # # strptime() defines a date format for conversion into an actual date object
-    # date_object = datetime.strptime(date_clean, '%a, %d/%m/%Y - %H:%M')
-    # self.date = date_object
 
 
     # Content
