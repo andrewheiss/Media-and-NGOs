@@ -232,9 +232,9 @@ class Article:
 
     # Tags
     tags_string = self._strip_all_tags(str(tags_raw[0]))  # Strip all HTML
-    tags_clean = tags_string.replace('Search Keywords: ', '')
-    tags_split = tags_clean.split('|')
-    tags = [tag.strip().lower() for tag in tags_split]
+    tags_clean = tags_string.replace('Search Keywords: ', '')  # Remove non-tag text
+    tags_split = tags_clean.split('|')  # Split along pipe characters
+    tags = [tag.strip().lower() for tag in tags_split]  # Clean each tag
     self.tags = tags
 
 
