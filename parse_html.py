@@ -224,20 +224,18 @@ class Article:
     self.word_count = len(content_no_punc.split())
 
 
-    # TODO: The rest of this stuff
-    # TODO: Tags
     # TODO: URL
     # TODO: Type
     # TODO: Translation
     # TODO: Subtitle
 
+
     # Tags
-
-    # tags_raw
-
-    # tags_raw = soup.select('.view-free-tags .field-content a')
-    # tags = [tag.string.strip().lower() for tag in tags_raw]
-    # self.tags = tags
+    tags_string = self._strip_all_tags(str(tags_raw[0]))  # Strip all HTML
+    tags_clean = tags_string.replace('Search Keywords: ', '')
+    tags_split = tags_clean.split('|')
+    tags = [tag.strip().lower() for tag in tags_split]
+    self.tags = tags
 
 
     # URL
