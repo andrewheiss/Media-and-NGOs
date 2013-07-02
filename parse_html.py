@@ -68,7 +68,7 @@ class Article:
       html_file: String of path to file to be parsed
     """
     # self._verify_encoding(html_file)  # Not needed for files downloaded with httrack!
-    self._extract_fields_egind(html_file)
+    self._extract_fields_ahram(html_file)
 
 
   def _extract_fields_egind(self, html_file):
@@ -371,19 +371,24 @@ class Article:
 #----------------------------------------
 # Connect to the database
 # PARSE_DECLTYPES so datetime works (see http://stackoverflow.com/a/4273249/120898)
-conn = sqlite3.connect(database, detect_types=sqlite3.PARSE_DECLTYPES)  
-c = conn.cursor()
+# conn = sqlite3.connect(database, detect_types=sqlite3.PARSE_DECLTYPES)
+# c = conn.cursor()
 
 # Turn on foreign keys
-c.execute("""PRAGMA foreign_keys = ON""")
+# c.execute("""PRAGMA foreign_keys = ON""")
 
 # Loop through the list, parse each file, and write it to the database
-for html_file in [html_file for html_file in glob.glob(files_to_parse)]:
+# for html_file in [html_file for html_file in glob.glob(files_to_parse)]:
   # print('\n'+html_file)
-  article = Article(html_file)
+  # article = Article(html_file)
   # article.report()
-  article.write_to_db(conn, c)
+  # article.write_to_db(conn, c)
 
 # CLose everything up
-c.close()
-conn.close()
+# c.close()
+# conn.close()
+
+
+html_file = 'ahram_test/17889.html'
+article = Article(html_file)
+# article.report()
