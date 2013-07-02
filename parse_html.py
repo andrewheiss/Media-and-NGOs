@@ -210,7 +210,7 @@ class Article:
     # TODO: Remove Word HTML crap ([if gte mso 9]><xml> <o:DocumentProperties>  <o:Revision>0</o:Revision>, etc.)
 
     # Tag-free content
-    content_no_tags = ' '.join([self._strip_all_tags(chunk) for chunk in content_clean])
+    content_no_tags = '\n'.join([self._strip_all_tags(chunk) for chunk in content_clean])
     self.content_no_tags = content_no_tags
 
     # Just words and word count
