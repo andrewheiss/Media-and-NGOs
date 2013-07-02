@@ -142,15 +142,21 @@ class Article:
     title_clean = ' '.join([str(tag).strip() for tag in title_raw[0].contents])
     self.title = self._strip_all_tags(title_clean)
 
+
     # Parse date and sources
     source_and_date_blob = soup.select('#ContentPlaceHolder1_source')
     source_and_date = ' '.join([str(tag).strip() for tag in source_and_date_blob[0].contents])
 
     # Stupid non-semantic al-Ahram doesn't do this consistently. Some sources
-    # are separated by commas, some by 'and', and some even by two spaces. But
-    # an 'and' within parentheses doesn't count, so that has to be taken into
-    # account someday. TODO: Ignore 'and's in parentheses
-    source_and_date_split = re.split(',|and|  ', source_and_date)
+    # are separated by commas, some by 'and', and some even by two spaces.
+    # Some sources also have an 'and' within parentheses that technically
+    # doesn't mean that there are separate sources (like 'Egyptian Elections
+    # Watch (Ahram Online and Jadaliyya)'). However, it's difficult to keep
+    # those all together, so instead I replace all the parentheses with spaces
+    # so that Ahram Online, Jadaliyya and EEW all count as separate sources.
+    source_and_date = re.sub('(\(|\))', ' ' , source_and_date)  # Replace parentheses with spaces
+    source_and_date_split = re.split(',|and|  ', source_and_date)  # Split the string on commans, 'and', and double spaces
+
 
     # Date
     # The date is the last element of the list
@@ -160,15 +166,14 @@ class Article:
     self.date = date_object
 
 
-    # Source
-    source_clean = [source.strip() for source in source_and_date_split]  # Anything that's left is a source
+    # Sources
+    # Anything that's left is a source
+    source_clean = [source.strip() for source in source_and_date_split if source != '']  # Remove blank entries
     self.sources = source_clean
-    print(self.sources)
-    self.authors = None
 
-    # TODO: Handle multiple or complex sources, maybe search string backwards to get date
+    self.authors = None  # Temporary...
+
     # TODO: Find missing articles
-
 
 
     # Content
