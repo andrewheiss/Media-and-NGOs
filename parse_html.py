@@ -368,7 +368,7 @@ class Article:
     return(' '.join(html_list))  # Return a string of all list elements combined
 
   def _strip_extra_tags(self, html):
-    """Remove all HTML tags from the given string"""
+    """Remove <script>, <br>, and <div> tags from the given string"""
     html_bs = BeautifulSoup(html)
     to_extract = html_bs.find_all(['script', 'br', 'div'])  # Choose tags to extract
     [item.extract() for item in to_extract]  # Get rid of extraneous tags
