@@ -153,6 +153,8 @@ class Article:
 
     # Date
     date_clean = source_and_date_split[1]
+    # TODO: Handle multiple or complex sources, maybe search string backwards to get date
+    # TODO: Find missing articles
 
 
     # Source
