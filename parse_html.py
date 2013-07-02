@@ -8,8 +8,8 @@
 # Python version: ≥3.0
 # Usage:          Edit the two variables below and run the script
 # Issues:         Egypt Independent: 
-#                   * a few files have '(All day)' instead of a time
-#                   * a few files didn't actually finish downloading
+#                   * a few files have '(All day)' instead of a time (changed aribtrarily by hand to 8:00)
+#                   * a few files didn't actually finish downloading (downloaded manually)
 #                   * a couple articles have Word HTML cruft that I don't automatically 
 #                     filter out. Fix them manually in the SQLite database.
 #                     (Find them with: SELECT * FROM articles WHERE article_content LIKE "%if gte%")
