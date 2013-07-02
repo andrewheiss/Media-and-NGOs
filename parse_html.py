@@ -18,7 +18,7 @@
 # Configure parsing
 #--------------------
 database = 'egypt_independent.db'  # Create this beforehand; schema is in `schema.sql`
-files_to_parse = 'egind_clean/*'  # Needs * to work properly
+files_to_parse = 'ahram_test/*'  # Needs * to work properly
 
 
 #---------------------------------------------------------------------
@@ -166,6 +166,8 @@ class Article:
     # author_raw = soup.select('.field-field-author .field-items a')
     # author_clean = [author.string.strip() for author in author_raw]
     # self.authors = author_clean
+    # TODO: Handle multiple or complex sources, maybe search string backwards to get date
+    # TODO: Find missing articles
 
     # Date
     # date_raw = soup.select('.field-field-published-date span')
@@ -224,6 +226,12 @@ class Article:
 
 
     # TODO: The rest of this stuff
+    # TODO: Tags
+    # TODO: URL
+    # TODO: Type
+    # TODO: Translation
+    # TODO: Subtitle
+
     # Tags
 
     # tags_raw
@@ -255,11 +263,11 @@ class Article:
     """Print out everything (for testing purposes)"""
     print("Title:", self.title)
     # print("Date:", self.date)
-    print("Authors:", self.authors)
+    # print("Authors:", self.authors)
     print("Sources:", self.sources)
-    print("Content:", self.content)
-    print("Just text:", self.content_no_tags)
-    print("No punctuation:", self.content_no_punc)
+    # print("Content:", self.content)
+    # print("Just text:", self.content_no_tags)
+    # print("No punctuation:", self.content_no_punc)
     print("Word count:", self.word_count)
     # print("URL:", self.url)
     # print("Type:", self.type)
@@ -381,9 +389,9 @@ class Article:
 
 # Loop through the list, parse each file, and write it to the database
 # for html_file in [html_file for html_file in glob.glob(files_to_parse)]:
-  # print('\n'+html_file)
-  # article = Article(html_file)
-  # article.report()
+#   print('\n'+html_file)
+#   article = Article(html_file)
+#   article.report()
   # article.write_to_db(conn, c)
 
 # CLose everything up
@@ -391,6 +399,13 @@ class Article:
 # conn.close()
 
 
-html_file = 'ahram_test/17889.html'
+# html_file = 'ahram_test/17145.html'  # Multiple authors
+# html_file = 'ahram_test/24919.html'  # Word HTML junk
+html_file = 'ahram_test/24939.html'  # With Jadaliyya
+# html_file = 'ahram_test/310.html'  # Source, source, date
+# html_file = 'ahram_test/317.html'  # No source
+# html_file = 'ahram_test/438.html'  # Source  source
+
+print('\n'+html_file)
 article = Article(html_file)
-# article.report()
+article.report()
