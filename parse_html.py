@@ -125,7 +125,7 @@ class Article:
     self.url = url
 
     # Type
-    # Determine the articule type based on the URL (opinion or news)
+    # Determine the article type based on the URL (opinion or news)
     self.type = 'Opinion' if '/opinion/' in self.url else 'News'
 
     # Translation
@@ -195,9 +195,7 @@ class Article:
     # then extracted from the content using BeautifulSoup.
     content_blob_split_iter = groupby(content_blob, lambda x: x == 'Short link: ')
     content_blob_split = [list(group) for k, group in content_blob_split_iter if not k]
-
     content_raw = content_blob_split[0]
-    url_raw = content_blob_split[1]
 
     # Extract keywords from content
     content_soup = BeautifulSoup('\n'.join(content_raw))
@@ -224,7 +222,6 @@ class Article:
     self.word_count = len(content_no_punc.split())
 
 
-    # TODO: URL
     # TODO: Type
     # TODO: Translation
     # TODO: Subtitle
@@ -239,16 +236,15 @@ class Article:
 
 
     # URL
-    # Fortunately EI used Facebook's OpenGraph, so there's a dedicated meta tag for the URL
-    # Example: <meta property="og:url" content="http://www.egyptindependent.com/opinion/beyond-sectarianism">
-
-    # url_raw
+    # shortlink = soup.find('input', {'class':'text_inner_ShortLink'})['value']  # Beautiful Soup way...
+    url_raw = ''.join(content_blob_split[1])  # Make raw HTML a single string
+    shortlink = re.search("value=\"(\\d+).html\"", url_raw).group(1)  # Find the number of the shortlink
+    url = 'http://english.ahram.org.eg/News/{0}.aspx'.format(shortlink)  # Insert shortlink into URL
+    self.url = url
     
-    # url = soup.find('meta', {'property':'og:url'})['content']
-    # self.url = url
 
     # Type
-    # Determine the articule type based on the URL (opinion or news)
+    # Determine the article type based on the URL (opinion or news)
     # self.type = 'Opinion' if '/opinion/' in self.url else 'News'
 
     # Translation
