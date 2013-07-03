@@ -235,8 +235,14 @@ class Article:
     # URL
     # shortlink = soup.find('input', {'class':'text_inner_ShortLink'})['value']  # Beautiful Soup way...
     url_raw = ''.join(content_blob_split[1])  # Make raw HTML a single string
-    shortlink = re.search("value=\"(\\d+).html\"", url_raw).group(1)  # Find the number of the shortlink
-    url = 'http://english.ahram.org.eg/News/{0}.aspx'.format(shortlink)  # Insert shortlink into URL
+    shortlink = re.search("value=\"(.+)\"", url_raw).group(1)  # Get the contents of the input box
+    
+    if 'http' in shortlink:
+      url = shortlink  # The given shortlink is the actual shortlink
+    else:
+      shortlink_numbers = re.sub(r'[^\d]+', '', shortlink)  # Only select the numbers
+      url = 'http://english.ahram.org.eg/News/{0}.aspx'.format(shortlink_numbers)  # Insert shortlink into URL
+    
     self.url = url
     
     # Type
