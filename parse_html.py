@@ -222,18 +222,12 @@ class Article:
     self.word_count = len(content_no_punc.split())
 
 
-    # TODO: Type
-    # TODO: Translation
-    # TODO: Subtitle
-
-
     # Tags
     tags_string = self._strip_all_tags(str(tags_raw[0]))  # Strip all HTML
     tags_clean = tags_string.replace('Search Keywords: ', '')  # Remove non-tag text
     tags_split = tags_clean.split('|')  # Split along pipe characters
     tags = [tag.strip().lower() for tag in tags_split]  # Clean each tag
     self.tags = tags
-
 
     # URL
     # shortlink = soup.find('input', {'class':'text_inner_ShortLink'})['value']  # Beautiful Soup way...
@@ -242,14 +236,17 @@ class Article:
     url = 'http://english.ahram.org.eg/News/{0}.aspx'.format(shortlink)  # Insert shortlink into URL
     self.url = url
     
-
     # Type
-    # Determine the article type based on the URL (opinion or news)
-    # self.type = 'Opinion' if '/opinion/' in self.url else 'News'
+    # Determine the article type based on the page title, since al-Ahram
+    # doesn't easily distinguish between its categories *except* in the title
+    # and in some navbar highlighting
+    self.type = 'Opinion' if '- Opinion' in soup.title.string else 'News'
 
     # Translation
     # No explicit translations in al-Ahram
     self.translated = False
+
+    # TODO: Subtitle
 
 
   def report(self):
