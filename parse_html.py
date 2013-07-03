@@ -248,8 +248,8 @@ class Article:
     # self.type = 'Opinion' if '/opinion/' in self.url else 'News'
 
     # Translation
-    # Look at the last paragraph of the article to see if it says "translated," "translation," etc.
-    # self.translated = True if 'translat' in content_clean[-1] else False
+    # No explicit translations in al-Ahram
+    self.translated = False
 
 
   def report(self):
