@@ -223,11 +223,14 @@ class Article:
 
 
     # Tags
-    tags_string = self._strip_all_tags(str(tags_raw[0]))  # Strip all HTML
-    tags_clean = tags_string.replace('Search Keywords: ', '')  # Remove non-tag text
-    tags_split = tags_clean.split('|')  # Split along pipe characters
-    tags = [tag.strip().lower() for tag in tags_split]  # Clean each tag
-    self.tags = tags
+    if tags_raw:
+      tags_string = self._strip_all_tags(str(tags_raw[0]))  # Strip all HTML
+      tags_clean = tags_string.replace('Search Keywords: ', '')  # Remove non-tag text
+      tags_split = tags_clean.split('|')  # Split along pipe characters
+      tags = [tag.strip().lower() for tag in tags_split]  # Clean each tag
+      self.tags = tags
+    else:
+      self.tags = []
 
     # URL
     # shortlink = soup.find('input', {'class':'text_inner_ShortLink'})['value']  # Beautiful Soup way...
@@ -389,10 +392,11 @@ class Article:
 
 # html_file = 'ahram_test/17145.html'  # Multiple authors
 # html_file = 'ahram_test/24919.html'  # Word HTML junk
-html_file = 'ahram_test/24939.html'  # With Jadaliyya
+# html_file = 'ahram_test/24939.html'  # With Jadaliyya
 # html_file = 'ahram_test/310.html'  # Source, source, date
 # html_file = 'ahram_test/317.html'  # No source
 # html_file = 'ahram_test/438.html'  # Source  source
+html_file = 'ahram_test/26895.html'  # No tags
 
 print('\n'+html_file)
 article = Article(html_file)
