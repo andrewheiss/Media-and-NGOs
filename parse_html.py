@@ -28,7 +28,7 @@ files_to_parse = 'ahram_test/*'  # Needs * to work properly
 #---------------------------------------------------------------------
 
 # Import modules
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Comment
 from datetime import datetime
 from subprocess import check_output, call
 from itertools import groupby
@@ -137,6 +137,11 @@ class Article:
     """Extract elements of the article using BeautifulSoup"""
     # TODO: Find missing articles
     soup = BeautifulSoup(open(html_file,'r'))
+    
+    # Remove HTML comments (since they contain Word HTML cruft)
+    for comment in soup.findAll(
+        text=lambda text: isinstance(text, Comment)):
+        comment.extract()
 
     # Title
     title_raw = soup.select('#ContentPlaceHolder1_hd')
@@ -206,7 +211,6 @@ class Article:
     [tag.extract() for tag in tags_raw]
 
     # Clean content
-    # TODO: Remove Word HTML crap ([if gte mso 9]><xml> <o:DocumentProperties>  <o:Revision>0</o:Revision>, etc.)
     content_raw = [str(line) for line in content_soup.contents if line != '\n']  # Get raw contents
     content_clean = [self._strip_extra_tags(chunk) for chunk in content_raw]  # Clean tags
     content_clean = [chunk for chunk in content_clean if chunk != '']  # Remove empty items
@@ -263,11 +267,11 @@ class Article:
     print("Title:", self.title)
     # print("Date:", self.date)
     # print("Authors:", self.authors)
-    print("Sources:", self.sources)
-    # print("Content:", self.content)
-    # print("Just text:", self.content_no_tags)
+    # print("Sources:", self.sources)
+    print("Content:", self.content)
+    print("Just text:", self.content_no_tags)
     # print("No punctuation:", self.content_no_punc)
-    print("Word count:", self.word_count)
+    # print("Word count:", self.word_count)
     # print("URL:", self.url)
     # print("Type:", self.type)
     # print("Tags:", self.tags)
@@ -398,8 +402,8 @@ class Article:
 # conn.close()
 
 
-html_file = 'ahram_test/17145.html'  # Multiple authors
-# html_file = 'ahram_test/24919.html'  # Word HTML junk
+# html_file = 'ahram_test/17145.html'  # Multiple authors
+html_file = 'ahram_test/24919.html'  # Word HTML junk
 # html_file = 'ahram_test/24939.html'  # With Jadaliyya
 # html_file = 'ahram_test/310.html'  # Source, source, date
 # html_file = 'ahram_test/317.html'  # No source
