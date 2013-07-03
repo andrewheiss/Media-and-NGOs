@@ -143,8 +143,10 @@ class Article:
     title_clean = ' '.join([str(tag).strip() for tag in title_raw[0].contents])
     self.title = self._strip_all_tags(title_clean)
 
-    # TODO: Subtitle
-
+    # Subtitle
+    subtitle_raw = soup.select('#ContentPlaceHolder1_bref')
+    subtitle_clean = ' '.join([str(tag).strip() for tag in subtitle_raw[0].contents])
+    self.subtitle = self._strip_all_tags(subtitle_clean)
 
     # Parse date and sources
     source_and_date_blob = soup.select('#ContentPlaceHolder1_source')
@@ -396,13 +398,13 @@ class Article:
 # conn.close()
 
 
-# html_file = 'ahram_test/17145.html'  # Multiple authors
+html_file = 'ahram_test/17145.html'  # Multiple authors
 # html_file = 'ahram_test/24919.html'  # Word HTML junk
 # html_file = 'ahram_test/24939.html'  # With Jadaliyya
 # html_file = 'ahram_test/310.html'  # Source, source, date
 # html_file = 'ahram_test/317.html'  # No source
 # html_file = 'ahram_test/438.html'  # Source  source
-html_file = 'ahram_test/26895.html'  # No tags
+# html_file = 'ahram_test/26895.html'  # No tags, no subtitle
 
 print('\n'+html_file)
 article = Article(html_file)
