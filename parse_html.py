@@ -135,12 +135,15 @@ class Article:
 
   def _extract_fields_ahram(self, html_file):
     """Extract elements of the article using BeautifulSoup"""
+    # TODO: Find missing articles
     soup = BeautifulSoup(open(html_file,'r'))
 
     # Title
     title_raw = soup.select('#ContentPlaceHolder1_hd')
     title_clean = ' '.join([str(tag).strip() for tag in title_raw[0].contents])
     self.title = self._strip_all_tags(title_clean)
+
+    # TODO: Subtitle
 
 
     # Parse date and sources
@@ -173,8 +176,6 @@ class Article:
 
     self.authors = None  # Temporary...
 
-    # TODO: Find missing articles
-
 
     # Content
     # Al-Ahram sticks all their content and tag metadata in the same messy div. 
@@ -203,12 +204,11 @@ class Article:
     [tag.extract() for tag in tags_raw]
 
     # Clean content
+    # TODO: Remove Word HTML crap ([if gte mso 9]><xml> <o:DocumentProperties>  <o:Revision>0</o:Revision>, etc.)
     content_raw = [str(line) for line in content_soup.contents if line != '\n']  # Get raw contents
     content_clean = [self._strip_extra_tags(chunk) for chunk in content_raw]  # Clean tags
     content_clean = [chunk for chunk in content_clean if chunk != '']  # Remove empty items
     self.content = "\n".join(content_clean)
-    
-    # TODO: Remove Word HTML crap ([if gte mso 9]><xml> <o:DocumentProperties>  <o:Revision>0</o:Revision>, etc.)
 
     # Tag-free content
     content_no_tags = '\n'.join([self._strip_all_tags(chunk) for chunk in content_clean])
@@ -245,8 +245,6 @@ class Article:
     # Translation
     # No explicit translations in al-Ahram
     self.translated = False
-
-    # TODO: Subtitle
 
 
   def report(self):
