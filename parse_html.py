@@ -17,7 +17,8 @@
 #--------------------
 # Configure parsing
 #--------------------
-database = 'egypt_independent.db'  # Create this beforehand; schema is in `schema.sql`
+publication = 'ahram'  # Must be "egind", "ahram", or "dne"
+database = 'Corpora/ahram_test.db'  # Create this beforehand; schema is in `schema.sql`
 files_to_parse = 'ahram_test/*'  # Needs * to work properly
 
 
@@ -46,9 +47,10 @@ class Article:
 
   Attributes:
     title: Title as string
+    subtitle: Subtitle as string (not in Egypt Independent)
     date: Date as date object
-    authors: List of author(s)
-    sources: List of source(s) (mostly for articles translated from al-Masry al-Youm Arabic)
+    authors: List of author(s) (for opinion articles)
+    sources: List of source(s) (for news articles)
     content: HTML content as string
     content_no_tags: Tag-free version of HTML content as string
     content_no_punc: Punctuation-free, lowercase version of content as string
@@ -56,7 +58,7 @@ class Article:
     url: URL as string
     type: Type of article (news or opinion) as string
     tags: List of tag(s)
-    translated: Boolean indicating whether the article is a translation
+    translated: Boolean indicating whether the article is a translation (not in al-Ahram)
 
   Returns:
     A new article object
@@ -68,7 +70,14 @@ class Article:
       html_file: String of path to file to be parsed
     """
     # self._verify_encoding(html_file)  # Not needed for files downloaded with httrack!
-    self._extract_fields_ahram(html_file)
+    if publication == 'egind':
+      self._extract_fields_egind(html_file)
+    elif publication == 'ahram':
+      self._extract_fields_ahram(html_file)
+    elif publication == 'dne':
+      pass
+    else:
+      raise Exception("You must specify 'egind', 'ahram', or 'dne' as the publication.")
 
 
   def _extract_fields_egind(self, html_file):
@@ -79,6 +88,9 @@ class Article:
     title_raw = soup.select('.pane-node-title div')
     title_clean = ' '.join([str(tag).strip() for tag in title_raw[0].contents])
     self.title = title_clean
+
+    # Subtitle
+    self.subtitle = None
 
     # Source
     source_raw = soup.select('.field-field-source .field-items a')
@@ -150,7 +162,8 @@ class Article:
     # Subtitle
     subtitle_raw = soup.select('#ContentPlaceHolder1_bref')
     subtitle_clean = ' '.join([str(tag).strip() for tag in subtitle_raw[0].contents])
-    self.subtitle = self._strip_all_tags(subtitle_clean)
+    subtitle_clean = self._strip_all_tags(subtitle_clean)
+    self.subtitle = subtitle_clean if subtitle_clean != '' else None
 
     # Parse date and sources
     source_and_date_blob = soup.select('#ContentPlaceHolder1_source')
@@ -188,11 +201,11 @@ class Article:
 
     # Following the conventions of Egypt Independent, opinion articles have authors, news articles have sources
     if self.type == 'Opinion':
-      self.sources = None
+      self.sources = []
       self.authors = source_clean
     else:
       self.sources = source_clean
-      self.authors = None
+      self.authors = []
 
 
     # Content
@@ -270,12 +283,13 @@ class Article:
   def report(self):
     """Print out everything (for testing purposes)"""
     print("Title:", self.title)
+    print("Subtitle:", self.subtitle)
     print("Date:", self.date)
     print("Authors:", self.authors)
     print("Sources:", self.sources)
-    # print("Content:", self.content)
-    # print("Just text:", self.content_no_tags)
-    # print("No punctuation:", self.content_no_punc)
+    print("Content:", self.content)
+    print("Just text:", self.content_no_tags)
+    print("No punctuation:", self.content_no_punc)
     print("Word count:", self.word_count)
     print("URL:", self.url)
     print("Type:", self.type)
@@ -292,12 +306,12 @@ class Article:
     """
     # Insert article
     c.execute("""INSERT OR IGNORE INTO articles 
-      (article_title, article_date, article_url, article_type, 
-        article_content, article_content_no_tags, 
+      (article_title, article_subtitle, article_date, article_url, 
+        article_type, article_content, article_content_no_tags, 
         article_content_no_punc, article_word_count, article_translated) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
-      (self.title, self.date, self.url, self.type, 
-        self.content, self.content_no_tags, 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", 
+      (self.title, self.subtitle, self.date, self.url, 
+        self.type, self.content, self.content_no_tags, 
         self.content_no_punc, self.word_count, self.translated))
     c.execute("""SELECT id_article FROM articles WHERE article_url = ?""", [self.url])
     article_in_db = c.fetchall()
@@ -389,22 +403,22 @@ class Article:
 #----------------------------------------
 # Connect to the database
 # PARSE_DECLTYPES so datetime works (see http://stackoverflow.com/a/4273249/120898)
-# conn = sqlite3.connect(database, detect_types=sqlite3.PARSE_DECLTYPES)
-# c = conn.cursor()
+conn = sqlite3.connect(database, detect_types=sqlite3.PARSE_DECLTYPES)
+c = conn.cursor()
 
 # Turn on foreign keys
-# c.execute("""PRAGMA foreign_keys = ON""")
+c.execute("""PRAGMA foreign_keys = ON""")
 
 # Loop through the list, parse each file, and write it to the database
-# for html_file in [html_file for html_file in glob.glob(files_to_parse)]:
-#   print('\n'+html_file)
-#   article = Article(html_file)
-#   article.report()
-  # article.write_to_db(conn, c)
+for html_file in [html_file for html_file in glob.glob(files_to_parse)]:
+  # print('\n'+html_file)
+  article = Article(html_file)
+  # article.report()
+  article.write_to_db(conn, c)
 
 # CLose everything up
-# c.close()
-# conn.close()
+c.close()
+conn.close()
 
 
 # html_file = 'ahram_test/17145.html'  # Multiple authors
@@ -414,7 +428,7 @@ class Article:
 # html_file = 'ahram_test/317.html'  # No source
 # html_file = 'ahram_test/438.html'  # Source  source
 # html_file = 'ahram_test/26895.html'  # No tags, no subtitle
-html_file = 'ahram_test/10059.html'  # Opinion
+# html_file = 'ahram_test/10059.html'  # Opinion
 
-article = Article(html_file)
-article.report()
+# article = Article(html_file)
+# article.report()
