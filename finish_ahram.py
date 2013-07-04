@@ -17,7 +17,7 @@
 # Python version: ≥3.0
 # Usage:          * Edit the file names below and run. 
 #                 * Run the resultant bash script (either locally or on a server somewhere)
-#                 * Filter the downloaded files in bash with `grep -L Page_NotExists *.html | xargs rm`
+#                 * Filter the downloaded files in bash with `grep -l "Page doesn.t exist" *.html | xargs rm`
 
 #---------
 # Set up
