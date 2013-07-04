@@ -135,7 +135,6 @@ class Article:
 
   def _extract_fields_ahram(self, html_file):
     """Extract elements of the article using BeautifulSoup"""
-    # TODO: Find missing articles
     soup = BeautifulSoup(open(html_file,'r'))
     
     # Remove HTML comments (since they contain Word HTML cruft)
@@ -176,12 +175,24 @@ class Article:
     self.date = date_object
 
 
-    # Sources
-    # Anything that's left is a source
-    source_clean = [source.strip() for source in source_and_date_split if source != '']  # Remove blank entries
-    self.sources = source_clean
+    # Type
+    # Determine the article type based on the page title, since al-Ahram
+    # doesn't easily distinguish between its categories *except* in the title
+    # and in some navbar highlighting
+    self.type = 'Opinion' if '- Opinion' in soup.title.string else 'News'
 
-    self.authors = None  # Temporary...
+
+    # Sources
+    # Anything that's left in `source_and_date_split` is a source
+    source_clean = [source.strip() for source in source_and_date_split if source != '']  # Remove blank entries
+
+    # Following the conventions of Egypt Independent, opinion articles have authors, news articles have sources
+    if self.type == 'Opinion':
+      self.sources = None
+      self.authors = source_clean
+    else:
+      self.sources = source_clean
+      self.authors = None
 
 
     # Content
@@ -250,12 +261,6 @@ class Article:
       url = 'http://english.ahram.org.eg/News/{0}.aspx'.format(shortlink_numbers)  # Insert shortlink into URL
     
     self.url = url
-    
-    # Type
-    # Determine the article type based on the page title, since al-Ahram
-    # doesn't easily distinguish between its categories *except* in the title
-    # and in some navbar highlighting
-    self.type = 'Opinion' if '- Opinion' in soup.title.string else 'News'
 
     # Translation
     # No explicit translations in al-Ahram
@@ -265,17 +270,17 @@ class Article:
   def report(self):
     """Print out everything (for testing purposes)"""
     print("Title:", self.title)
-    # print("Date:", self.date)
-    # print("Authors:", self.authors)
-    # print("Sources:", self.sources)
-    print("Content:", self.content)
-    print("Just text:", self.content_no_tags)
+    print("Date:", self.date)
+    print("Authors:", self.authors)
+    print("Sources:", self.sources)
+    # print("Content:", self.content)
+    # print("Just text:", self.content_no_tags)
     # print("No punctuation:", self.content_no_punc)
-    # print("Word count:", self.word_count)
-    # print("URL:", self.url)
-    # print("Type:", self.type)
-    # print("Tags:", self.tags)
-    # print("Translated:", self.translated)
+    print("Word count:", self.word_count)
+    print("URL:", self.url)
+    print("Type:", self.type)
+    print("Tags:", self.tags)
+    print("Translated:", self.translated)
 
 
   def write_to_db(self, conn, c):
@@ -403,13 +408,13 @@ class Article:
 
 
 # html_file = 'ahram_test/17145.html'  # Multiple authors
-html_file = 'ahram_test/24919.html'  # Word HTML junk
+# html_file = 'ahram_test/24919.html'  # Word HTML junk
 # html_file = 'ahram_test/24939.html'  # With Jadaliyya
 # html_file = 'ahram_test/310.html'  # Source, source, date
 # html_file = 'ahram_test/317.html'  # No source
 # html_file = 'ahram_test/438.html'  # Source  source
 # html_file = 'ahram_test/26895.html'  # No tags, no subtitle
+html_file = 'ahram_test/10059.html'  # Opinion
 
-print('\n'+html_file)
 article = Article(html_file)
 article.report()
