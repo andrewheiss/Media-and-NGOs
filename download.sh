@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 
+# DON'T RUN THIS WHOLE SCRIPT ALL AT ONCE! Just copy/paste individual lines.
+
 # The best way to get all the articles for all these sites was to brute force
 # download everything with a spider and then parse it all with BeautifulSoup
 # in Python. Because it took days to crawl through the sites, it was most
@@ -30,3 +32,8 @@ httrack "http://english.ahram.org.eg" -O "./blah" http://english.ahram.org.eg +*
 httrack "http://www.dailynewsegypt.com" -O "./blah" http://www.dailynewsegypt.com +*.css +*.js -*.gif -*.jpg -*.png -*.tif -*.bmp --verbose --extra-log --file-log --single-log -#L1000000 > log.txt &
 
 httrack "http://www.egyptindependent.com" -O "./blah" http://www.egyptindependent.com +*.css +*.js -*.gif -*.jpg -*.png -*.tif -*.bmp --verbose --extra-log --file-log --single-log -#L1000000 > log.txt &
+
+
+# To make things simpler, divide all the HTML files for Ahram and Egypt
+# Independent into subfolders (with 2000 articles) with this one liner:
+ls|xargs -n2000|awk ' {i++; system("mkdir dir"i); system("mv "$0" -t dir"i)}'
