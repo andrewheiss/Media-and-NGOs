@@ -61,3 +61,24 @@ else:
   for article in missing_articles:
     print(wgetize(article), file=wget_handle)
 
+def check_missing_articles():
+  import fnmatch
+
+  conn = sqlite3.connect('/Users/andrew/Dropbox/Media and NGOs in the ME/Media and NGOs/Corpora/ahram.db', detect_types=sqlite3.PARSE_DECLTYPES)
+  c = conn.cursor()
+
+  saved_articles = [only_numbers(row[0]) for row in c.execute('SELECT article_url FROM articles')]
+
+  matches = []
+  for root, dirnames, filenames in os.walk('/Users/andrew/Downloads/ahram/blah/english.ahram.org.eg/News'):
+    for filename in fnmatch.filter(filenames, '*.html'):
+        matches.append(filename)
+
+  existing_articles = [only_numbers(match) for match in matches]
+
+  missing_articles = [article for article in existing_articles if article not in saved_articles]
+  print(missing_articles)
+
+  # Close everything up
+  c.close()
+  conn.close()
