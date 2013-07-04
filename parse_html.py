@@ -192,7 +192,7 @@ class Article:
     # Determine the article type based on the page title, since al-Ahram
     # doesn't easily distinguish between its categories *except* in the title
     # and in some navbar highlighting
-    self.type = 'Opinion' if '- Opinion' in soup.title.string else 'News'
+    self.type = 'Opinion' if 'Opinion -' in soup.title.string else 'News'
 
 
     # Sources
