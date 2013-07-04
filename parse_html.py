@@ -37,6 +37,7 @@ import string
 import sqlite3
 import re
 import glob
+import shutil
 
 
 #----------------------
@@ -412,9 +413,13 @@ c.execute("""PRAGMA foreign_keys = ON""")
 # Loop through the list, parse each file, and write it to the database
 for html_file in [html_file for html_file in glob.glob(files_to_parse)]:
   # print('\n'+html_file)
-  article = Article(html_file)
-  # article.report()
-  article.write_to_db(conn, c)
+  try:
+    article = Article(html_file)
+    # article.report()
+    article.write_to_db(conn, c)
+  except IndexError:
+    # If the file doesn't parse right, save it for later
+    shutil.move(html_file, '/Users/andrew/Desktop/Broken')
 
 # CLose everything up
 c.close()
@@ -429,6 +434,10 @@ conn.close()
 # html_file = 'ahram_test/438.html'  # Source  source
 # html_file = 'ahram_test/26895.html'  # No tags, no subtitle
 # html_file = 'ahram_test/10059.html'  # Opinion
+# html_file = 'ahram_test/22750.html'  # Broken
 
-# article = Article(html_file)
-# article.report()
+# try:
+#   article = Article(html_file)
+#   article.report()
+# except IndexError:
+#   shutil.move(html_file, '/Users/andrew/Desktop/Broken')
