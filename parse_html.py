@@ -20,6 +20,7 @@
 publication = 'ahram'  # Must be "egind", "ahram", or "dne"
 database = 'Corpora/ahram_test.db'  # Create this beforehand; schema is in `schema.sql`
 files_to_parse = 'ahram_test/*'  # Needs * to work properly
+broken_files = 'broken'  # Location for broken files
 
 
 #---------------------------------------------------------------------
@@ -419,7 +420,7 @@ for html_file in [html_file for html_file in glob.glob(files_to_parse)]:
     article.write_to_db(conn, c)
   except IndexError:
     # If the file doesn't parse right, save it for later
-    shutil.move(html_file, '/Users/andrew/Desktop/Broken')
+    shutil.move(html_file, broken_files)
 
 # CLose everything up
 c.close()
