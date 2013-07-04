@@ -7,12 +7,26 @@
 # Last updated:   2013-07-01
 # Python version: ≥3.0
 # Usage:          Edit the two variables below and run the script
-# Issues:         Egypt Independent: 
+# Notes:          Egypt Independent: 
 #                   * a few files have '(All day)' instead of a time (changed aribtrarily by hand to 8:00)
 #                   * a few files didn't actually finish downloading (downloaded manually)
 #                   * a couple articles have Word HTML cruft that I don't automatically 
 #                     filter out. Fix them manually in the SQLite database.
 #                     (Find them with: SELECT * FROM articles WHERE article_content LIKE "%if gte%")
+#                 al-Ahram:
+#                   * a few files have malformed HTML (an errant </div>). The script moves these 
+#                     to the folder specified in `broken_files`
+#                   * a few files aren't caught by the IndexError check (something about infinite 
+#                     recursion). Those have to be moved by hand as they crop up.
+#                   * The number of rows in the final database may not correspond to the number of files 
+#                     downloaded. For example, httrack downloaded `57831.html` and `57831-2.html`. Because 
+#                     both files are identical and technically have the same URL, only one is inserted 
+#                     into the database. The helper function `check_missing_articles()` in `finish_ahram.py` 
+#                     compares files with database rows if needed.
+#                   * httrack surprisingly didn't download every article. However, al-Ahram has a cool 
+#                     sequentially numbered shortlink system. `finish_ahram.py` determines which shortlinked 
+#                     articles were not downloaded and creates a bash script to download all potentially 
+#                     missing articles with wget.
 
 #--------------------
 # Configure parsing
@@ -422,7 +436,7 @@ for html_file in [html_file for html_file in glob.glob(files_to_parse)]:
     # If the file doesn't parse right, save it for later
     shutil.move(html_file, broken_files)
 
-# CLose everything up
+# Close everything up
 c.close()
 conn.close()
 
