@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-# Title:          clean_files.py
+# Title:          clean_egind.py
 # Description:    Filter a directory of HTML files, copying legitimate files to a new folder
 #                 Necessary because Egypt Independent's Drupal installation served up multiple 
 #                 versions of each page (probably because of Views), and httrack added a bunch 
 #                 of temporary files
 # Author:         Andrew Heiss
-# Last updated:   2013-07-01
+# Last updated:   2013-07-05
 # Python version: ≥3.0
 # Usage:          Edit the two variables below and run the script
 #                 Manual hand-holding: I'm too lazy to programmatically filter out directories, 
