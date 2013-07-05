@@ -9,6 +9,21 @@
 # Last updated:   2013-07-05
 # Python version: ≥3.0
 # Usage:          Edit the two variables below and run the script.
+# Issues:         * The script is made to use relative folders. If you use an absolute folder 
+#                   for `nested_folders` the renamed files will use the full page (i.e. 
+#                   users_andrew_desktop_folder_2010/06/03/page.html), which is ugly. It's best 
+#                   to copy this script into a folder one step below the year-based folders. 
+#                   For example:
+#
+#                   clean_dne.py
+#                   articles/
+#                   --2009/
+#                   --2010/
+#                   --...
+#
+#                 * Each year has an additional folder named `page`. Remove them manually.
+#                 * On January 28, 2013 there was a photo gallery (photo-gallery-same-day-different-rage) 
+#                   that was posted as an article and thus doesn't follow the same folder structure. Delete it manually.
 
 #---------
 # Set up
