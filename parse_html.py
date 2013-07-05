@@ -31,9 +31,9 @@
 #--------------------
 # Configure parsing
 #--------------------
-publication = 'ahram'  # Must be "egind", "ahram", or "dne"
-database = 'Corpora/ahram_test.db'  # Create this beforehand; schema is in `schema.sql`
-files_to_parse = 'ahram_test/*'  # Needs * to work properly
+publication = 'dne'  # Must be "egind", "ahram", or "dne"
+database = 'Corpora/dne_test.db'  # Create this beforehand; schema is in `schema.sql`
+files_to_parse = 'dne_clean/*'  # Needs * to work properly
 broken_files = 'broken'  # Location for broken files
 
 
@@ -91,7 +91,7 @@ class Article:
     elif publication == 'ahram':
       self._extract_fields_ahram(html_file)
     elif publication == 'dne':
-      pass
+      self._extract_fields_dne(html_file)
     else:
       raise Exception("You must specify 'egind', 'ahram', or 'dne' as the publication.")
 
@@ -298,19 +298,19 @@ class Article:
 
   def report(self):
     """Print out everything (for testing purposes)"""
-    print("Title:", self.title)
-    print("Subtitle:", self.subtitle)
-    print("Date:", self.date)
-    print("Authors:", self.authors)
-    print("Sources:", self.sources)
-    print("Content:", self.content)
-    print("Just text:", self.content_no_tags)
-    print("No punctuation:", self.content_no_punc)
-    print("Word count:", self.word_count)
-    print("URL:", self.url)
-    print("Type:", self.type)
-    print("Tags:", self.tags)
-    print("Translated:", self.translated)
+    # print("Title:", self.title)
+    # print("Subtitle:", self.subtitle)
+    # print("Date:", self.date)
+    # print("Authors:", self.authors)
+    # print("Sources:", self.sources)
+    # print("Content:", self.content)
+    # print("Just text:", self.content_no_tags)
+    # print("No punctuation:", self.content_no_punc)
+    # print("Word count:", self.word_count)
+    # print("URL:", self.url)
+    # print("Type:", self.type)
+    # print("Tags:", self.tags)
+    # print("Translated:", self.translated)
 
 
   def write_to_db(self, conn, c):
@@ -419,40 +419,28 @@ class Article:
 #----------------------------------------
 # Connect to the database
 # PARSE_DECLTYPES so datetime works (see http://stackoverflow.com/a/4273249/120898)
-conn = sqlite3.connect(database, detect_types=sqlite3.PARSE_DECLTYPES)
-c = conn.cursor()
+# conn = sqlite3.connect(database, detect_types=sqlite3.PARSE_DECLTYPES)
+# c = conn.cursor()
 
-# Turn on foreign keys
-c.execute("""PRAGMA foreign_keys = ON""")
+# # Turn on foreign keys
+# c.execute("""PRAGMA foreign_keys = ON""")
 
-# Loop through the list, parse each file, and write it to the database
-for html_file in [html_file for html_file in glob.glob(files_to_parse)]:
-  # print('\n'+html_file)
-  try:
-    article = Article(html_file)
-    # article.report()
-    article.write_to_db(conn, c)
-  except IndexError:
-    # If the file doesn't parse right, save it for later
-    shutil.move(html_file, broken_files)
+# # Loop through the list, parse each file, and write it to the database
+# for html_file in [html_file for html_file in glob.glob(files_to_parse)]:
+#   # print('\n'+html_file)
+#   try:
+#     article = Article(html_file)
+#     # article.report()
+#     article.write_to_db(conn, c)
+#   except IndexError:
+#     # If the file doesn't parse right, save it for later
+#     shutil.move(html_file, broken_files)
 
-# Close everything up
-c.close()
-conn.close()
+# # Close everything up
+# c.close()
+# conn.close()
 
 
-# html_file = 'ahram_test/17145.html'  # Multiple authors
-# html_file = 'ahram_test/24919.html'  # Word HTML junk
-# html_file = 'ahram_test/24939.html'  # With Jadaliyya
-# html_file = 'ahram_test/310.html'  # Source, source, date
-# html_file = 'ahram_test/317.html'  # No source
-# html_file = 'ahram_test/438.html'  # Source  source
-# html_file = 'ahram_test/26895.html'  # No tags, no subtitle
-# html_file = 'ahram_test/10059.html'  # Opinion
-# html_file = 'ahram_test/22750.html'  # Broken
-
-# try:
-#   article = Article(html_file)
-#   article.report()
-# except IndexError:
-#   shutil.move(html_file, '/Users/andrew/Desktop/Broken')
+html_file = 'dne_clean/2010_03_11_a-single-woman-in-cairo-the-new-challenge.html'  # Multiple authors
+article = Article(html_file)
+article.report()
