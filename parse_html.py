@@ -296,6 +296,38 @@ class Article:
     self.translated = False
 
 
+  def _extract_fields_dne(self, html_file):
+    """Extract elements of the article using BeautifulSoup"""
+
+    # DNE has malformed HTML in the post title (i.e. <h1>Post title</h2>).
+    # Before loading the file into BeautifulSoup, load it into memory and
+    # replace the offending <h1> tag with an <h2> tag so it matches.
+    # (Alternatively this could have been done by using a lookbehind assertion
+    # to replace the offending </h2> with </h1>, but Python doesn't support 
+    # .+ in lookbehind regexes.)
+    file_to_parse = open(html_file, 'r')
+    cleaned_file = re.sub("^<h1 class=\"posttitle\"(?=.+</h2>$)", 
+                          "<h2 class=\"posttitle\"", 
+                          file_to_parse.read(), 
+                          flags=re.MULTILINE)
+    soup = BeautifulSoup(cleaned_file)
+    
+
+    # Title
+    title_raw = soup.select('h2.posttitle')
+    title_clean = ' '.join([str(tag).strip() for tag in title_raw[0].contents])
+    self.title = self._strip_all_tags(title_clean)
+    print(self.title)
+
+    # Subtitle
+    subtitle_raw = soup.select('#postExcerpt')
+    subtitle_clean = ' '.join([str(tag).strip() for tag in subtitle_raw[0].contents])
+    subtitle_clean = self._strip_all_tags(subtitle_clean)
+    self.subtitle = subtitle_clean if subtitle_clean != '' else None
+    print(self.subtitle)
+
+
+
   def report(self):
     """Print out everything (for testing purposes)"""
     # print("Title:", self.title)
