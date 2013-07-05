@@ -1,11 +1,24 @@
 #!/usr/bin/env python3
 
+# Title:          clean_dne.py
+# Description:    Flatten the complex nested folder stucture made by WordPress and rename 
+#                 all the corresponding `index.html` files accordingly. 
+#                 Copy site_dump/2010/03/11/post-title/index.html 
+#                 to folder_for_clean_files/2010_03_11_post-title.html
+# Author:         Andrew Heiss
+# Last updated:   2013-07-05
+# Python version: ≥3.0
+# Usage:          Edit the two variables below and run the script.
+
+#---------
+# Set up
+#---------
 nested_folders = 'dne_test'
 folder_for_clean_files = 'dne_clean'
 
+# Import modules
 import os
 from shutil import copy2
-
 
 # Make the new folder
 if not os.path.exists(folder_for_clean_files):
