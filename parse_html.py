@@ -27,6 +27,15 @@
 #                     sequentially numbered shortlink system. `finish_ahram.py` determines which shortlinked 
 #                     articles were not downloaded and creates a bash script to download all potentially 
 #                     missing articles with wget.
+#                 Daily News Egypt:
+#                   * Not all '*page*.html' files were removed by hand, as described in `clean_dne.py`, 
+#                     since I didn't realize there were so many. Fortunately the error checker found 
+#                     them and moved them automatically. 
+#                   * Some files were misencoded. Adding a second exception for UnicodeDecodeError 
+#                     and moving those to a separate folder caught those.
+#                   * My attempts at parsing bylines automatically kind of worked, but kind of failed. 
+#                     Lots of authors and sources are just incomplete sentence fragments. Those entries 
+#                     had to be cleaned up manually.
 
 #--------------------
 # Configure parsing
@@ -392,7 +401,7 @@ class Article:
       additional_sources += [source.strip() for source in source_article_byline if len(source.split()) < 6]
 
     # Check the first line for a wire service credit
-    wire_sources = re.findall("(Reuters|AP|PA|ANP|AFP|DPA|ANSA)", firstline)
+    wire_sources = re.findall("(Reuters|AP|PA|ANP|AFP|DPA|ANSA|MENA)", firstline)
 
     # Combine lists of possible sources (since an article could hypothetically have a WP author and a byline)
     combined_sources = source_clean + additional_sources + wire_sources
@@ -552,32 +561,23 @@ class Article:
 #----------------------------------------
 # Connect to the database
 # PARSE_DECLTYPES so datetime works (see http://stackoverflow.com/a/4273249/120898)
-# conn = sqlite3.connect(database, detect_types=sqlite3.PARSE_DECLTYPES)
-# c = conn.cursor()
+conn = sqlite3.connect(database, detect_types=sqlite3.PARSE_DECLTYPES)
+c = conn.cursor()
 
 # # Turn on foreign keys
-# c.execute("""PRAGMA foreign_keys = ON""")
+c.execute("""PRAGMA foreign_keys = ON""")
 
-# # Loop through the list, parse each file, and write it to the database
-# for html_file in [html_file for html_file in glob.glob(files_to_parse)]:
-#   # print('\n'+html_file)
-#   try:
-#     article = Article(html_file)
-#     # article.report()
-#     article.write_to_db(conn, c)
-#   except IndexError:
-#     # If the file doesn't parse right, save it for later
-#     shutil.move(html_file, broken_files)
+# Loop through the list, parse each file, and write it to the database
+for html_file in [html_file for html_file in glob.glob(files_to_parse)]:
+  # print('\n'+html_file)
+  try:
+    article = Article(html_file)
+    # article.report()
+    article.write_to_db(conn, c)
+  except IndexError:
+    # If the file doesn't parse right, save it for later
+    shutil.move(html_file, broken_files)
 
-# # Close everything up
-# c.close()
-# conn.close()
-
-
-# html_file = 'dne_clean/2010_03_11_a-single-woman-in-cairo-the-new-challenge.html'  # Actual DB author
-html_file = 'dne_clean/2010_08_05_activist-sentenced-to-6-months-for-assaulting-policeman.html'  # Byline
-# html_file = 'dne_clean/2013_01_16_saudi-clerics-protest-kings-move-to-empower-women.html'  # Wire byline
-# html_file = 'dne_clean/2012_02_17_iran-hits-out-against-foreign-interference.html'
-# html_file = 'dne_clean/2013_06_22_the-old-regime-strikes-back.html'  # Opinion
-article = Article(html_file)
-article.report()
+# Close everything up
+c.close()
+conn.close()
