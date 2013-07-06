@@ -331,7 +331,7 @@ class Article:
     date_object = datetime.strptime(date_clean, '%B %d, %Y')
     self.date = date_object
 
-    # Check if the article is opinion
+    # Check if the article is opinion  MAYBE: Check in #metaStuff for opinion instead of breadcrumb?
     opinion_raw = soup.select('#crumbs')
     opinion_clean = ' '.join([str(tag).strip() for tag in opinion_raw[0].contents])
     opinion_clean = self._strip_all_tags(opinion_clean)
@@ -376,7 +376,7 @@ class Article:
     if source_byline_raw:
       source_clean = [source_byline_raw.contents[0]]
     elif source_bio_raw:
-      source_clean = source_bio_raw[0].contents  # TODO: This can be 'author and author'. Account for multiple authors
+      source_clean = source_bio_raw[0].contents
     else:
       source_clean = []
 
@@ -387,9 +387,9 @@ class Article:
     # Author byline
     if firstline.startswith(('By ', 'By ')):  # First 'By ' uses a &nbsp;
       source_article_byline = firstline.replace('By', '').strip()
+      source_article_byline = re.split(',|and', source_article_byline)  # Account for multiple authors
       # Sanity check, just in case an actual first paragraph starts with 'By'; no byline should be longer than 5 words
-      if len(source_article_byline.split()) < 6:
-        additional_sources.append(source_article_byline)
+      source_article_byline = additional_sources += [source.strip() for source in source_article_byline if len(source.split()) < 6]
 
     # Check the first line for a wire service credit
     wire_sources = re.findall("(Reuters|AP|PA|ANP|AFP|DPA|ANSA)", firstline)
@@ -417,10 +417,12 @@ class Article:
 
     # Tags
     # These are hidden in a #metaStuff list!
-    # MAYBE: Check in #metaStuff for opinion instead of breadcrumb?
-    # tags_raw = soup.select('.view-free-tags .field-content a')
-    # tags = [tag.string.strip().lower() for tag in tags_raw]
-    # self.tags = tags
+    tags_raw = soup.select('ul#metaStuff li')
+    tags_raw = ''.join([str(tag).strip() for tag in tags_raw if 'Tagged With:' in str(tag)])
+    tags_raw = self._strip_all_tags(tags_raw).replace('Tagged With:', '')
+    tags = tags_raw.split(',')
+    tags = [tag.strip().lower() for tag in tags]
+    self.tags = tags
 
     # Translation
     # No explicit translations in Daily News Egypt
@@ -440,7 +442,7 @@ class Article:
     print("Word count:", self.word_count)
     print("URL:", self.url)
     print("Type:", self.type)
-    # print("Tags:", self.tags)
+    print("Tags:", self.tags)
     print("Translated:", self.translated)
 
 
@@ -573,9 +575,9 @@ class Article:
 
 
 # html_file = 'dne_clean/2010_03_11_a-single-woman-in-cairo-the-new-challenge.html'  # Actual DB author
-# html_file = 'dne_clean/2010_08_05_activist-sentenced-to-6-months-for-assaulting-policeman.html'  # Byline
+html_file = 'dne_clean/2010_08_05_activist-sentenced-to-6-months-for-assaulting-policeman.html'  # Byline
 # html_file = 'dne_clean/2013_01_16_saudi-clerics-protest-kings-move-to-empower-women.html'  # Wire byline
 # html_file = 'dne_clean/2012_02_17_iran-hits-out-against-foreign-interference.html'
-html_file = 'dne_clean/2013_06_22_the-old-regime-strikes-back.html'  # Opinion
+# html_file = 'dne_clean/2013_06_22_the-old-regime-strikes-back.html'  # Opinion
 article = Article(html_file)
 article.report()
