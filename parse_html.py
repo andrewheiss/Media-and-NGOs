@@ -140,7 +140,7 @@ class Article:
     self.content_no_tags = content_no_tags
 
     # Just words and word count
-    punc = string.punctuation.replace('-', '') + '—”’“‘'  # Define punctuation
+    punc = string.punctuation.replace('-', '') + '–—”’“‘'  # Define punctuation
     regex = re.compile('[%s]' % re.escape(punc))
     content_no_punc = regex.sub(' ', self.content_no_tags.lower())  # Remove punctuation and make everything lowercase
     self.content_no_punc = content_no_punc
@@ -261,7 +261,7 @@ class Article:
     self.content_no_tags = content_no_tags
 
     # Just words and word count
-    punc = string.punctuation.replace('-', '') + '—”’“‘'  # Define punctuation
+    punc = string.punctuation.replace('-', '') + '–—”’“‘'  # Define punctuation
     regex = re.compile('[%s]' % re.escape(punc))
     content_no_punc = regex.sub(' ', self.content_no_tags.lower())  # Remove punctuation and make everything lowercase
     self.content_no_punc = content_no_punc
@@ -317,29 +317,120 @@ class Article:
     title_raw = soup.select('h2.posttitle')
     title_clean = ' '.join([str(tag).strip() for tag in title_raw[0].contents])
     self.title = self._strip_all_tags(title_clean)
-    print(self.title)
 
     # Subtitle
     subtitle_raw = soup.select('#postExcerpt')
     subtitle_clean = ' '.join([str(tag).strip() for tag in subtitle_raw[0].contents])
     subtitle_clean = self._strip_all_tags(subtitle_clean)
     self.subtitle = subtitle_clean if subtitle_clean != '' else None
-    print(self.subtitle)
+
+    # Date
+    date_raw = soup.select('.metaStuff time')
+    date_clean = date_raw[0].string.strip()
+    # strptime() defines a date format for conversion into an actual date object
+    date_object = datetime.strptime(date_clean, '%B %d, %Y')
+    self.date = date_object
+
+    # Content
+    content_raw = soup.select('div.entry')
+    content_clean = [self._strip_extra_tags(str(chunk)).strip() for chunk in content_raw[0].contents]  # Remove extra tags
+    content_clean = [str(line) for line in content_clean if line != '']  # Remove empty list elements
+    self.content = "\n".join(content_clean)
+
+    # Tag-free content
+    content_no_tags = '\n'.join([self._strip_all_tags(chunk) for chunk in content_clean])
+    self.content_no_tags = content_no_tags
+
+    # Just words and word count
+    punc = string.punctuation.replace('-', '') + '–—”’“‘'  # Define punctuation
+    regex = re.compile('[%s]' % re.escape(punc))
+    content_no_punc = regex.sub(' ', self.content_no_tags.lower())  # Remove punctuation and make everything lowercase
+    self.content_no_punc = content_no_punc
+    self.word_count = len(content_no_punc.split())
+
+    # Source / Author
+    # DNE makes this needlessly complicated. Sometimes the author is actually
+    # built in the WP database (as it should be) and displayed as part of the
+    # template in the .metaStuff header div. Sometimes the author isn't listed
+    # there, but is still in the database---instead the author is described in
+    # a separate #authorBio div. Other times there is no author in the WP
+    # database, but an author is mentioned in the first line of the article
+    # (either "By X" or as a wire service). And sometimes there's no author at
+    # all, which I assume is just by Daily News Egypt. So stupidly
+    # complicated, guys.
+
+    # First try to get the author from the .metaStuff byline
+    # <p class="metaStuff"><span itemprop="author"><a href="">Author</a></span>...
+    source_byline_raw = soup.find('span', {'itemprop':'author'}).find('a')
+
+    # Then try the author bio div
+    # <div id="authorBio">...<div class='author-data'>...<h4><a href=''>Daily News Egypt</a></h4>...
+    source_bio_raw = soup.select('#authorBio .author-data h4 a')
+
+    if source_byline_raw:
+      source_clean = [source_byline_raw.contents[0]]
+    elif source_bio_raw:
+      source_clean = source_bio_raw[0].contents
+    else:
+      source_clean = []
+
+    # Check the first line for an author
+    additional_sources = []
+    firstline = self._strip_all_tags(content_clean[0])
+
+    # Author byline
+    if firstline.startswith(('By ', 'By ')):  # First 'By ' uses a &nbsp;
+      source_article_byline = firstline.replace('By', '').strip()
+      # Sanity check, just in case an actual first paragraph starts with 'By'; no byline should be longer than 5 words
+      if len(source_article_byline.split()) < 6:
+        additional_sources.append(source_article_byline)
+
+    # Check the first line for a wire service credit
+    wire_sources = re.findall("(Reuters|AP|PA|ANP|AFP|DPA|ANSA)", firstline)
+
+    # Combine lists of possible sources (since an article could hypothetically have a WP author and a byline)
+    combined_sources = source_clean + additional_sources + wire_sources
+
+    # Create final list of sources (with Daily News Egypt as default if nothing was found)
+    final_sources = combined_sources if len(combined_sources) > 0 else ['Daily News Egypt']
+
+    # TODO: Make this dependent on whether the article is opinion, like egind and ahram
+    self.sources = final_sources
+
+
+    # URL
+    # Fortunately DNE used Facebook's OpenGraph, so there's a dedicated meta tag for the URL
+    # Example: <meta property="og:url" content="http://www.egyptindependent.com/opinion/beyond-sectarianism">
+    url = soup.find('meta', {'property':'og:url'})['content']
+    self.url = url
+
+    # Tags
+    # tags_raw = soup.select('.view-free-tags .field-content a')
+    # tags = [tag.string.strip().lower() for tag in tags_raw]
+    # self.tags = tags
+
+    # Type
+    # Determine the article type based on the URL (opinion or news)
+    # self.type = 'Opinion' if '/opinion/' in self.url else 'News'
+
+    # Translation
+    # Look at the last paragraph of the article to see if it says "translated," "translation," etc.
+    # self.translated = True if 'translat' in content_clean[-1] else False
 
 
 
   def report(self):
     """Print out everything (for testing purposes)"""
-    # print("Title:", self.title)
-    # print("Subtitle:", self.subtitle)
-    # print("Date:", self.date)
+    print("Title:", self.title)
+    print("Subtitle:", self.subtitle)
+    print("Date:", self.date)
     # print("Authors:", self.authors)
-    # print("Sources:", self.sources)
+    print("Sources:", self.sources)
     # print("Content:", self.content)
     # print("Just text:", self.content_no_tags)
     # print("No punctuation:", self.content_no_punc)
-    # print("Word count:", self.word_count)
-    # print("URL:", self.url)
+    print("Word count:", self.word_count)
+    print("URL:", self.url)
     # print("Type:", self.type)
     # print("Tags:", self.tags)
     # print("Translated:", self.translated)
@@ -473,6 +564,9 @@ class Article:
 # conn.close()
 
 
-html_file = 'dne_clean/2010_03_11_a-single-woman-in-cairo-the-new-challenge.html'  # Multiple authors
+# html_file = 'dne_clean/2010_03_11_a-single-woman-in-cairo-the-new-challenge.html'  # Actual DB author
+html_file = 'dne_clean/2010_08_05_activist-sentenced-to-6-months-for-assaulting-policeman.html'  # Byline
+# html_file = 'dne_clean/2013_01_16_saudi-clerics-protest-kings-move-to-empower-women.html'  # Wire byline
+# html_file = 'dne_clean/2012_02_17_iran-hits-out-against-foreign-interference.html'
 article = Article(html_file)
 article.report()
