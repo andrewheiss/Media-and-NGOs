@@ -331,6 +331,12 @@ class Article:
     date_object = datetime.strptime(date_clean, '%B %d, %Y')
     self.date = date_object
 
+    # Check if the article is opinion
+    opinion_raw = soup.select('#crumbs')
+    opinion_clean = ' '.join([str(tag).strip() for tag in opinion_raw[0].contents])
+    opinion_clean = self._strip_all_tags(opinion_clean)
+    self.type = 'Opinion' if 'Opinion' in opinion_clean else 'News'
+
     # Content
     content_raw = soup.select('div.entry')
     content_clean = [self._strip_extra_tags(str(chunk)).strip() for chunk in content_raw[0].contents]  # Remove extra tags
@@ -370,7 +376,7 @@ class Article:
     if source_byline_raw:
       source_clean = [source_byline_raw.contents[0]]
     elif source_bio_raw:
-      source_clean = source_bio_raw[0].contents
+      source_clean = source_bio_raw[0].contents  # TODO: This can be 'author and author'. Account for multiple authors
     else:
       source_clean = []
 
@@ -394,8 +400,13 @@ class Article:
     # Create final list of sources (with Daily News Egypt as default if nothing was found)
     final_sources = combined_sources if len(combined_sources) > 0 else ['Daily News Egypt']
 
-    # TODO: Make this dependent on whether the article is opinion, like egind and ahram
-    self.sources = final_sources
+    # Following the conventions of Egypt Independent, opinion articles have authors, news articles have sources
+    if self.type == 'Opinion':
+      self.sources = []
+      self.authors = final_sources
+    else:
+      self.sources = final_sources
+      self.authors = []
 
 
     # URL
@@ -405,18 +416,15 @@ class Article:
     self.url = url
 
     # Tags
+    # These are hidden in a #metaStuff list!
+    # MAYBE: Check in #metaStuff for opinion instead of breadcrumb?
     # tags_raw = soup.select('.view-free-tags .field-content a')
     # tags = [tag.string.strip().lower() for tag in tags_raw]
     # self.tags = tags
 
-    # Type
-    # Determine the article type based on the URL (opinion or news)
-    # self.type = 'Opinion' if '/opinion/' in self.url else 'News'
-
     # Translation
-    # Look at the last paragraph of the article to see if it says "translated," "translation," etc.
-    # self.translated = True if 'translat' in content_clean[-1] else False
-
+    # No explicit translations in Daily News Egypt
+    self.translated = False
 
 
   def report(self):
@@ -424,16 +432,16 @@ class Article:
     print("Title:", self.title)
     print("Subtitle:", self.subtitle)
     print("Date:", self.date)
-    # print("Authors:", self.authors)
+    print("Authors:", self.authors)
     print("Sources:", self.sources)
     # print("Content:", self.content)
     # print("Just text:", self.content_no_tags)
     # print("No punctuation:", self.content_no_punc)
     print("Word count:", self.word_count)
     print("URL:", self.url)
-    # print("Type:", self.type)
+    print("Type:", self.type)
     # print("Tags:", self.tags)
-    # print("Translated:", self.translated)
+    print("Translated:", self.translated)
 
 
   def write_to_db(self, conn, c):
@@ -565,8 +573,9 @@ class Article:
 
 
 # html_file = 'dne_clean/2010_03_11_a-single-woman-in-cairo-the-new-challenge.html'  # Actual DB author
-html_file = 'dne_clean/2010_08_05_activist-sentenced-to-6-months-for-assaulting-policeman.html'  # Byline
+# html_file = 'dne_clean/2010_08_05_activist-sentenced-to-6-months-for-assaulting-policeman.html'  # Byline
 # html_file = 'dne_clean/2013_01_16_saudi-clerics-protest-kings-move-to-empower-women.html'  # Wire byline
 # html_file = 'dne_clean/2012_02_17_iran-hits-out-against-foreign-interference.html'
+html_file = 'dne_clean/2013_06_22_the-old-regime-strikes-back.html'  # Opinion
 article = Article(html_file)
 article.report()
