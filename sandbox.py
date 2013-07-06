@@ -5,6 +5,8 @@
 #   LEFT JOIN articles_authors AS B ON (A.id_article = B.fk_article)
 #   LEFT JOIN authors as C on (B.fk_author = C.id_author)
 
+# SELECT id_article, article_title, article_date, article_url, article_type, article_content_no_tags, article_translated FROM articles ORDER BY RANDOM() LIMIT 50
+
 # Text analysis poop...
 # from collections import Counter
 # word_list = content_no_punc.split()
