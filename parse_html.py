@@ -389,7 +389,7 @@ class Article:
       source_article_byline = firstline.replace('By', '').strip()
       source_article_byline = re.split(',|and', source_article_byline)  # Account for multiple authors
       # Sanity check, just in case an actual first paragraph starts with 'By'; no byline should be longer than 5 words
-      source_article_byline = additional_sources += [source.strip() for source in source_article_byline if len(source.split()) < 6]
+      additional_sources += [source.strip() for source in source_article_byline if len(source.split()) < 6]
 
     # Check the first line for a wire service credit
     wire_sources = re.findall("(Reuters|AP|PA|ANP|AFP|DPA|ANSA)", firstline)
