@@ -32,7 +32,8 @@
 #                     since I didn't realize there were so many. Fortunately the error checker found 
 #                     them and moved them automatically. 
 #                   * Some files were misencoded. Adding a second exception for UnicodeDecodeError 
-#                     and moving those to a separate folder caught those.
+#                     and moving those to a separate folder caught those. Fix them by resaving the 
+#                     files as UTF-8.
 #                   * My attempts at parsing bylines automatically kind of worked, but kind of failed. 
 #                     Lots of authors and sources are just incomplete sentence fragments. Those entries 
 #                     had to be cleaned up manually.
@@ -41,9 +42,9 @@
 # Configure parsing
 #--------------------
 publication = 'dne'  # Must be "egind", "ahram", or "dne"
-database = 'Corpora/dne_test.db'  # Create this beforehand; schema is in `schema.sql`
-files_to_parse = 'dne_clean/*'  # Needs * to work properly
-broken_files = 'broken'  # Location for broken files
+database = 'Corpora/dne.db'  # Create this beforehand; schema is in `schema.sql`
+files_to_parse = 'broken_dne_unicode/*'  # Needs * to work properly
+broken_files = 'broken_again'  # Location for broken files
 
 
 #---------------------------------------------------------------------
@@ -348,9 +349,19 @@ class Article:
 
     # Content
     content_raw = soup.select('div.entry')
-    content_clean = [self._strip_extra_tags(str(chunk)).strip() for chunk in content_raw[0].contents]  # Remove extra tags
+    # content_clean = [self._strip_extra_tags(str(chunk)).strip() for chunk in content_raw[0].contents]  # Remove extra tags
+    content_clean = [self._strip_again(str(chunk)).strip() for chunk in content_raw[0].contents]  # Remove extra tags
     content_clean = [str(line) for line in content_clean if line != '']  # Remove empty list elements
-    self.content = "\n".join(content_clean)
+    content_clean = "\n".join(content_clean)  # This can be self.content = ... for regular posts. A few DNE pages had malformed HTML, requiring the next section of cleaning
+    content_clean = content_clean.split('<p>Related posts:')  # Remove Related Posts section, since that sometimes stays, inexplicably
+    content_clean = content_clean[0]
+    content_clean_cdata = content_clean.split('//]]&gt;')  # Remove the CDATA junk that causes errors
+
+    if len(content_clean_cdata) > 1:
+        self.content = content_clean_cdata[1]
+    else:
+        self.content = content_clean
+    # That's the end of the extra cleaning
 
     # Tag-free content
     content_no_tags = '\n'.join([self._strip_all_tags(chunk) for chunk in content_clean])
@@ -445,7 +456,7 @@ class Article:
     print("Date:", self.date)
     print("Authors:", self.authors)
     print("Sources:", self.sources)
-    # print("Content:", self.content)
+    print("Content:", self.content)
     # print("Just text:", self.content_no_tags)
     # print("No punctuation:", self.content_no_punc)
     print("Word count:", self.word_count)
@@ -555,6 +566,14 @@ class Article:
     [item.extract() for item in to_extract]  # Get rid of extraneous tags
     return(str(html_bs))  # Return string of original HTML
 
+  def _strip_again(self, html):
+    invalid_tags = ['script', 'br', 'div']
+    soup = BeautifulSoup(html)
+    for tag in invalid_tags: 
+        for match in soup.findAll(tag):
+            match.replaceWithChildren()
+    return(str(soup))
+
 
 #----------------------------------------
 # Insert the articles into the database
@@ -564,12 +583,12 @@ class Article:
 conn = sqlite3.connect(database, detect_types=sqlite3.PARSE_DECLTYPES)
 c = conn.cursor()
 
-# # Turn on foreign keys
+# Turn on foreign keys
 c.execute("""PRAGMA foreign_keys = ON""")
 
 # Loop through the list, parse each file, and write it to the database
 for html_file in [html_file for html_file in glob.glob(files_to_parse)]:
-  # print('\n'+html_file)
+  print('\n'+html_file)
   try:
     article = Article(html_file)
     # article.report()
