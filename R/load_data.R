@@ -7,8 +7,6 @@
 # Load packages
 library(RSQLite)
 library(lubridate)
-library(plyr)
-library(stringr)
 
 
 #--------------
