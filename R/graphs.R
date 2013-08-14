@@ -27,29 +27,6 @@ egind.ngos.monthly <- ddply(egind.ngos, "month", summarise, x=length(month))
 ahram.ngos.monthly <- ddply(ahram.ngos, "month", summarise, x=length(month))
 dne.ngos.monthly <- ddply(dne.ngos, "month", summarise, x=length(month))
 
-# I WISH THIS COULD BE MADE INTO A FUNCTION!!!
-# Merge full and NGO count data frames
-merged <- merge(egind.monthly, egind.ngos.monthly, by="month")
-colnames(merged) <- c("month", "articles", "ngo.mentions")
-
-# Reconvert date (since doing anything to it coerces it to numeric epoch time)
-# See http://stackoverflow.com/questions/6434663/looping-over-a-date-object-result-in-a-numeric-iterator
-missing.months <- as.POSIXct(setdiff(egind.monthly$month, egind.ngos.monthly$month), origin="1970-01-01", tz="EET")
-missing.months <- floor_date(missing.months, "month")
-
-# Get the full count for the missing months
-missing.article.counts <- egind.monthly[which(egind.monthly$month %in% missing.months),]$x
-
-# Make a partial data frame and combine with the merged one
-missing.rows <- data.frame(month=missing.months, articles=missing.article.counts, ngo.mentions=0)
-egind.combined.monthly <- rbind(merged, missing.rows)
-
-# Calculate the proportion of NGO articles
-egind.combined.monthly$prop <- egind.combined.monthly$ngo.mentions / egind.combined.monthly$articles
-
-# Sort, just for fun
-egind.combined.monthly <- egind.combined.monthly[order(egind.combined.monthly$month),] 
-
 
 merge.counts <- function(full.data, ngo.data, publication) {
   # Merge full and NGO count data frames
