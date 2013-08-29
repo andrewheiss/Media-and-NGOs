@@ -4,3 +4,4 @@ Corpora/*
 .RData
 .Rhistory
 mallet/*
+*.pyc
