@@ -7,6 +7,8 @@
 
 # SELECT id_article, article_title, article_date, article_url, article_type, article_content_no_tags, article_translated FROM articles ORDER BY RANDOM() LIMIT 50
 
+# See also http://www.lornajane.net/posts/2011/inner-vs-outer-joins-on-a-many-to-many-relationship
+
 # Text analysis poop...
 # from collections import Counter
 # word_list = content_no_punc.split()
