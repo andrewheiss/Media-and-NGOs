@@ -1,24 +1,32 @@
 # Title:          load_data.R
 # Description:    Load all corpus data into R, clean it up, save as .RData file for later use
 # Author:         Andrew Heiss
-# Last updated:   2013-08-13
+# Last updated:   2013-12-24
 # R version:      ≥3.0
 
 # Load packages
 library(RSQLite)
 library(lubridate)
 
+# Set working directory
+base.directory <- "~/Dropbox/Media and NGOs in the ME/Media and NGOs/R"
+setwd(base.directory)
+
 
 #--------------
 # Import data
 #--------------
-drv <- dbDriver("SQLite") 
-egind.con <- dbConnect(drv, "/Users/andrew/Dropbox/Media and NGOs in the ME/Media and NGOs/Corpora/egypt_independent.db") 
-egind.articles <- dbGetQuery(egind.con, "SELECT * FROM articles WHERE article_word_count < 10000")  # Ignore new constitution
-ahram.con <- dbConnect(drv, "/Users/andrew/Dropbox/Media and NGOs in the ME/Media and NGOs/Corpora/ahram.db") 
-ahram.articles <- dbGetQuery(ahram.con, "SELECT * FROM articles")
-dne.con <- dbConnect(drv, "/Users/andrew/Dropbox/Media and NGOs in the ME/Media and NGOs/Corpora/dne.db") 
-dne.articles <- dbGetQuery(dne.con, "SELECT * FROM articles")
+# Connect to the databases
+drv <- dbDriver("SQLite")
+egind.con <- dbConnect(drv, "../Corpora/egypt_independent.db")
+ahram.con <- dbConnect(drv, "../Corpora/ahram.db")
+dne.con <- dbConnect(drv, "../Corpora/dne.db")
+
+# Query the databases
+date.range <- "article_date BETWEEN \'2011-11-24 00:00:00\' AND \'2013-04-25 23:59:59\'"
+egind.articles <- dbGetQuery(egind.con, paste("SELECT * FROM articles WHERE article_word_count < 10000 AND", date.range))  # Ignore new constitution
+ahram.articles <- dbGetQuery(ahram.con, paste("SELECT * FROM articles WHERE", date.range))
+dne.articles <- dbGetQuery(dne.con, paste("SELECT * FROM articles WHERE", date.range))
 
 
 #----------------
@@ -49,19 +57,33 @@ dne.articles$month <- floor_date(dne.articles$actual_date, "month")
 dne.articles$week <- floor_date(dne.articles$actual_date, "week")
 dne.articles$day <- floor_date(dne.articles$actual_date, "day")
 
+egind.articles$publication <- "egind"
+ahram.articles$publication <- "ahram"
+dne.articles$publication <- "dne"
+
 
 #-----------------------------------
 # Create subsets that mention NGOs
 #-----------------------------------
-ngos <- tolower(c("The Cairo Institute for Human Rights Studies", "Misryon Against Religious Discrimination", "The Egyptian Coalition for the Rights of the Child", "Arab Program for Human Rights Activists", "Egyptian Association for Economic and Social Rights", "The Egyptian Association for Community Participation Enhancement", "Rural Development Association", "Mother Association for Rights and Development", "The Human Right Association for the Assistance of the Prisoners", "Arab Network for Human Rights Information", "The Egyptian Initiative for Personal Rights", "Initiators for Culture and Media", "The Human Rights Legal Assistance Group", "The Land Center for Human Rights", "The International Center for Supporting Rights and Freedoms", "Shahid Center for Human Rights", "Egyptian Center for Support of Human Rights", "The Egyptian Center for Public Policy Studies", "The Egyptian Center for Economic and Social Rights", "Andalus Institute for Tolerance and Anti-Violence Studies", "Habi Center for Environmental Rights", "Hemaia Center for Supporting Human Rights Defenders", "Social Democracy Studies Center", "The Hesham Mobarak Law Center", "Arab Penal Reform Organization", "Appropriate Communications Techniques for Development", "Forum for Women in Development", "Arab Penal Reform Organization", "The Egyptian Organization for Human Rights", "Tanweer Center for Development and Human Rights", "Better Life Association", "The Arab Foundation for Democracy Studies and Human Rights", "Arab Foundation for Civil Society and Human Right Support", "The New Woman Foundation", "Women and Memory Forum", "The Egyptian Foundation for the Advancement of Childhood Conditions", "Awlad Al Ard Association", "Baheya Ya Masr", "Association for Freedom of Expression and of Thought", "Center for Egyptian Women’s Legal Assistance", "Nazra for Feminist Studies"))
+ngos <- c("The Cairo Institute for Human Rights Studies", "Misryon Against Religious Discrimination", "The Egyptian Coalition for the Rights of the Child", "Arab Program for Human Rights Activists", "Egyptian Association for Economic and Social Rights", "The Egyptian Association for Community Participation Enhancement", "Rural Development Association", "Mother Association for Rights and Development", "The Human Right Association for the Assistance of the Prisoners", "Arab Network for Human Rights Information", "The Egyptian Initiative for Personal Rights", "Initiators for Culture and Media", "The Human Rights Legal Assistance Group", "The Land Center for Human Rights", "The International Center for Supporting Rights and Freedoms", "Shahid Center for Human Rights", "Egyptian Center for Support of Human Rights", "The Egyptian Center for Public Policy Studies", "The Egyptian Center for Economic and Social Rights", "Andalus Institute for Tolerance and Anti-Violence Studies", "Habi Center for Environmental Rights", "Hemaia Center for Supporting Human Rights Defenders", "Social Democracy Studies Center", "The Hesham Mobarak Law Center", "Arab Penal Reform Organization", "Appropriate Communications Techniques for Development", "Forum for Women in Development", "Arab Penal Reform Organization", "The Egyptian Organization for Human Rights", "Tanweer Center for Development and Human Rights", "Better Life Association", "The Arab Foundation for Democracy Studies and Human Rights", "Arab Foundation for Civil Society and Human Right Support", "The New Woman Foundation", "Women and Memory Forum", "The Egyptian Foundation for the Advancement of Childhood Conditions", "Awlad Al Ard Association", "Baheya Ya Masr", "Association for Freedom of Expression and of Thought", "Center for Egyptian Women’s Legal Assistance", "Nazra for Feminist Studies")
 
-egind.ngos <- egind.articles[grepl(paste(ngos, collapse="|"), egind.articles$article_content_no_punc),]
-ahram.ngos <- ahram.articles[grepl(paste(ngos, collapse="|"), ahram.articles$article_content_no_punc),]
-dne.ngos <- dne.articles[grepl(paste(ngos, collapse="|"), dne.articles$article_content_no_punc),]
+# Search for any of these NGOs in the full corpus
+# Easiest way is to generate a huge regex:
+#  the cairo institute for human rights studies|misryon ...|the egyptian ... | ... 
+egind.articles$ngo.mention <- grepl(paste(tolower(ngos), collapse="|"), egind.articles$article_content_no_punc)
+ahram.articles$ngo.mention <- grepl(paste(tolower(ngos), collapse="|"), ahram.articles$article_content_no_punc)
+dne.articles$ngo.mention <- grepl(paste(tolower(ngos), collapse="|"), dne.articles$article_content_no_punc)
+
+# Subset based on ngo.mention boolean. This might seem like an unncessary 
+# intermediate step, but having an ngo.mention indicator variable might 
+# prove to be useful for stuff in the future.
+egind.ngos <- subset(egind.articles, ngo.mention==TRUE)
+ahram.ngos <- subset(ahram.articles, ngo.mention==TRUE)
+dne.ngos <- subset(dne.articles, ngo.mention==TRUE)
 
 
 #-----------------
 # Save for later
 #-----------------
-rm(drv, ahram.con, dne.con, egind.con)
-save(file="media_data.RData", list=ls(all=TRUE))
+save(ngos, egind.articles, egind.ngos, ahram.articles, 
+     ahram.ngos, dne.articles, dne.ngos, file="media_data.RData", compress="gzip")
