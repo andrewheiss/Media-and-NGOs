@@ -1,7 +1,24 @@
+# OS X stuff
 .DS_Store
+
+# Python stuff
+*.pyc
+
+# Corpus stuff
 *.db
 Corpora/*
-.RData
-.Rhistory
+
+# R stuff
+*.RData
+*.RDataTmp
+*.Rhistory
+
+# MALLET stuff
 mallet/*
-*.pyc
+R/mallet/*
+R/mallet_input/*
+topic-doctopics.txt
+topic-keys.txt
+topic-state.gz
+topics.mallet
+validation_articles.txt
