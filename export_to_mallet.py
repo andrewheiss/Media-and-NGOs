@@ -34,7 +34,7 @@ c = conn.cursor()
 
 # Query using the organization names
 org_sql = ['article_content_no_punc LIKE "%'+org.lower()+'%"' for org in organizations]
-sql_statement = 'SELECT * FROM articles WHERE '+' OR '.join(org for org in org_sql)
+sql_statement = 'SELECT * FROM articles WHERE ('+' OR '.join(org for org in org_sql) + ') AND article_date BETWEEN \'2011-11-24 00:00:00\' AND \'2013-04-25 23:59:59\''
 c.execute(sql_statement)
 
 # Fetch the results
