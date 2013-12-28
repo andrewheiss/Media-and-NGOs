@@ -14,7 +14,7 @@ topic.docs.norm$publication <- factor(regmatches(row.names(topic.docs.norm), reg
 # Calculate means and standard deviations of normalized proportions
 topic.means.wide <- ddply(topic.docs.norm, ~ publication, colwise(mean))  # TODO: colwise custom function that returns mean and sd?
 topic.means.long <- melt(topic.means.wide, id="publication", variable.name="topic", value.name="proportion")
-topic.means.long$label <- factor(topic.means.long$topic, labels=topic.keys.result$V3)
+topic.means.long$label <- factor(topic.means.long$topic, labels=topic.keys.result$short.names)
 
 topic.sds.wide <- ddply(topic.docs.norm, ~ publication, colwise(sd))
 topic.sds.long <- melt(topic.sds.wide, id="publication", variable.name="topic", value.name="stdev")
@@ -57,7 +57,7 @@ p + geom_bar(stat="identity") +
 
 # Bar plot and jittered points of absolute proportions
 plot.data <- melt(data=topic.docs.norm, id.vars="publication")  # Use full data instead of generated means
-plot.data$label <- factor(plot.data$variable, labels=topic.keys.result$V3)
+plot.data$label <- factor(plot.data$variable, labels=topic.keys.result$short.names)
 p <- ggplot(data=plot.data, aes(x=label, y=value))
 
 # Just jittering

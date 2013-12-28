@@ -114,4 +114,21 @@ normalize.topics <- function(x) {
 topic.docs <- data.frame(doc.topics)  # Regular
 topic.docs.norm <- normalize.topics(doc.topics)  # Normalized
 
+
+#-----------------------------
+# Add short names for topics
+#-----------------------------
+colnames(topic.keys.result) <- c("key", "dirichlet", "topic.words")
+short.names <- c("National government", "Morsi and the constitution", "Environmental issues",
+                 "World Bank and Egypt", "Police arrests", "Protests and clashes", 
+                 "Sexual violence", "Police torture", "Elections", "Human rights", 
+                 "Revolution", "Business and government", "Egyptian workers", 
+                 "Trials", "Religious issues", "Legislation", "Morsi and human rights",
+                 "SCAF", "Youth in the street", "Christian issues")
+topic.keys.result$short.names <- short.names
+
+
+#------------------
+# Save everything
+#------------------
 save(topic.keys.result, topic.docs, topic.docs.norm, file="topic_model.RData")

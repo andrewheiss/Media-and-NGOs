@@ -21,7 +21,7 @@ set.seed(seed)
 validation <- topic.docs[sample(nrow(topic.docs), num.articles), ]
 validation$article <- factor(regmatches(row.names(validation), regexpr("^[^\\.]+", row.names(validation))))
 validation.long <- melt(validation, id="article", variable.name="topic", value.name="proportion")
-validation.long$label <- factor(validation.long$topic, labels=topic.keys.result$V3)
+validation.long$label <- factor(validation.long$topic, labels=topic.keys.result$short.names)
 
 
 # Plot the topic proportions for sampled articles 
