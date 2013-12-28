@@ -22,3 +22,6 @@ topic-keys.txt
 topic-state.gz
 topics.mallet
 validation_articles.txt
+
+# Publication stuff
+Output/*
