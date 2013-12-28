@@ -1,3 +1,10 @@
+# Title:          plot_topic_model.R
+# Description:    Plot the proportions of topics in the topic model
+# Author:         Andrew Heiss
+# Last updated:   2013-12-28
+# R version:      ≥3.0
+
+# Load libraries
 library(ggplot2)
 library(grid)
 library(scales)
