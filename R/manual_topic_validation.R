@@ -7,6 +7,7 @@
 # Load libraries and set variables
 library(plyr)
 library(ggplot2)
+library(scales)
 library(reshape2)
 
 seed <- 1234
@@ -52,6 +53,7 @@ full.text <- ldply(lapply(validation$article, FUN=get.article), data.frame)
 
 # Print articles to file
 pretty.print.article <- function(x) {
+  cat("\n")
   cat("ID: ", x["id_article"], " (", x["publication"], ")\n\n", sep="")
   cat("Title:", x["article_title"], "\n\n")
   cat("Subtitle:", x["article_subtitle"], "\n\n")
@@ -60,9 +62,9 @@ pretty.print.article <- function(x) {
   cat("Word count:", x["article_word_count"], "\n\n")
   cat("Type:", x["article_type"], "\n\n")
   cat("Article:\n", x["article_content_no_tags"])
-  cat("\n\n\n--------------------\n\n\n") 
+  cat("\n\n\n--------------------\n\n") 
 }
 
-sink("validation_articles.txt")
+sink("../Output/validation_articles.txt")
 apply(full.text, MARGIN=1, FUN=pretty.print.article)
 sink(file=NULL)
