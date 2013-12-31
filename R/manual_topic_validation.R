@@ -65,6 +65,34 @@ pretty.print.article <- function(x) {
   cat("\n\n\n--------------------\n\n") 
 }
 
-sink("../Output/validation_articles.txt")
+sink("../Output/validation-articles.txt")
 apply(full.text, MARGIN=1, FUN=pretty.print.article)
 sink(file=NULL)
+
+
+#-----------------------------------------------------------------------
+# Get the topics assigned to each of the words in the sampled articles
+#-----------------------------------------------------------------------
+# Read the huge words database 
+# TODO: Make this more dynamic, since `topic-state.gz` is actually user configurable in `load_data.R`
+everything <- read.table("topic-state.gz")
+colnames(everything) <- c("doc", "source.file", "pos", "typeindex", "type", "topic")
+
+# Build list of filenames to select
+full.text$publication <- ifelse(full.text$publication == "egind", "egypt_independent", full.text$publication)
+articles.to.select <- paste("mallet_input/", full.text$publication, "_", full.text$id_article, ".txt", sep="")
+
+# Select them
+article.words <- subset(everything, everything$source.file %in% articles.to.select)
+rm(everything)  # Get rid of huge data frame
+
+# Merge the word data frame with the human-readable topics
+article.words$order <- 1:nrow(article.words)  # Add a column for the order, since merge kills the order
+combined <- merge(article.words, topic.keys.result, by.x="topic", by.y="key", sort=TRUE)  # Merge
+combined <- combined[order(combined$order), ]  # Reorder
+
+# Better column order
+combined <- combined[c("source.file", "doc", "pos", "typeindex", "type", "short.names", "topic.words")]
+
+# Save to a file
+write.csv(x=combined, file="../Output/topic-words.csv", row.names=FALSE)
