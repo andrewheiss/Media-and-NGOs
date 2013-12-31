@@ -7,7 +7,11 @@
 # Huge thanks to Rolf Fredheim for creating the arcplot + dendrogram + topic proportions idea!
 # http://quantifyingmemory.blogspot.com/2013/11/visualising-structure-in-topic-models.html
 
-# Useful dendrogram resources
+# Inspiration and help for this:
+#   * http://gastonsanchez.wordpress.com/2013/02/02/star-wars-arc-diagram/
+#   * http://tedunderwood.com/2012/11/11/visualizing-topic-models/
+
+# Useful dendrogram resources:
 #   * http://rpubs.com/gaston/dendrograms
 #   * http://wheatoncollege.edu/lexomics/files/2012/08/How-to-Read-a-Dendrogram-Web-Ready.pdf
 

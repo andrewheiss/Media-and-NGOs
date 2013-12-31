@@ -4,6 +4,11 @@
 # Last updated:   2013-12-28
 # R version:      ≥3.0
 
+# Inspiration from Ben Marwick's Day of Archaeology example: 
+# https://github.com/benmarwick/dayofarchaeology
+
+# MAYBE: Fine tune the model with this: http://www.matthewjockers.net/2013/04/12/secret-recipe-for-topic-modeling-themes/
+
 # Load libraries
 library(ggplot2)
 library(grid)
