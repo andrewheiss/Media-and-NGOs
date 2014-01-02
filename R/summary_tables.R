@@ -6,6 +6,7 @@
 
 # Libraries
 library(xtable)
+library(rtf)
 
 # Set working directory
 base.directory <- "~/Dropbox/Media and NGOs in the ME/Media and NGOs/R"
@@ -13,9 +14,6 @@ setwd(base.directory)
 
 # Load corpus
 load("media_data.RData")
-
-# Format
-table.format <- "latex"  # Either html or latex
 
 
 #-------------------------
@@ -49,5 +47,26 @@ header.names <- c("Publication", "Number of articles", "Number of words",
                   "Proportion of NGO articles")
 colnames(table.output) <- header.names
 
-# Pretty output
-print(xtable(prettyNum(table.output, big.mark=",", digits=4)), type=table.format)
+
+#-------------------
+# Export summaries
+#-------------------
+# Nicer formatting
+pretty.output <- prettyNum(table.output, big.mark=",", digits=4)
+
+# HTML
+print(xtable(pretty.output, caption="Table 1: Corpus summary"), 
+      type="html", file="../Output/table_1.html", include.rownames=FALSE, caption.placement="top")
+
+# LaTeX
+print(xtable(pretty.output, caption="Table 1: Corpus summary"), 
+      type="latex", file="../Output/table_1.tex", include.rownames=FALSE, caption.placement="top")
+
+# Word
+output <- RTF("../Output/table_1.docx", width=8.5, height=11)
+addText(output, "Table 1: ", bold=TRUE)
+addText(output, "Corpus summary")
+addNewLine(output)
+addTable(output, pretty.output, font.size=9, row.names=F, NA.string="-")
+done(output)
+
