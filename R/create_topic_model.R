@@ -36,7 +36,7 @@ output.doctopics <- "topic-doctopics.txt"  # Proportion of each topic in each in
 # Topic and optimization options
 num.topics <- 20  # Number of topics to model
 num.iterations <- 1000  # Number of training/learning Gibbs sampling iterations
-num.top.words <- 6  # Number of most probable words to print (num.top.words - 1 words, actually)
+num.top.words <- 11  # Number of most probable words to print (num.top.words - 1 words, actually)
 optimize.interval <- 20  # Number of iterations between reestimating dirichlet hyperparameters
 optimize.burnin <- 50  # Number of iterations to run before first estimating dirichlet hyperparameters
 stoplist <- "stopwords.txt"  # List of stopwords
@@ -131,4 +131,4 @@ topic.keys.result$short.names <- short.names
 #------------------
 # Save everything
 #------------------
-save(topic.keys.result, topic.docs, topic.docs.norm, file="topic_model.RData")
+save(ngos, topic.keys.result, topic.docs, topic.docs.norm, file="topic_model.RData")

@@ -70,3 +70,29 @@ addNewLine(output)
 addTable(output, pretty.output, font.size=9, row.names=F, NA.string="-")
 done(output)
 
+
+#----------------------
+# Export list of NGOs
+#----------------------
+# Add enough NAs to coerce list into a matrix
+num.columns <- 3
+cells.to.add <- num.columns - (length(ngos) %% num.columns)
+ngo.output <- matrix(c(sort(ngos), rep(NA, cells.to.add)), ncol=num.columns)
+
+# HTML
+print(xtable(ngo.output, caption="List of NGOs"), 
+      type="html", file="../Output/list.html", 
+      include.rownames=FALSE, include.colnames=FALSE, caption.placement="top")
+
+# LaTeX
+print(xtable(ngo.output, caption="List of NGOs"), 
+      type="latex", file="../Output/list.tex", 
+      include.rownames=FALSE, include.colnames=FALSE, caption.placement="top")
+
+# Word
+output <- RTF("../Output/list.docx", width=8.5, height=11)
+addText(output, "List of NGOs", bold=TRUE)
+# addText(output, "Corpus summary")
+addNewLine(output)
+addTable(output, ngo.output, font.size=9, row.names=FALSE, NA.string="")
+done(output)
