@@ -79,7 +79,9 @@ plot.data <- rbind(egind.combined.monthly, ahram.combined.monthly, dne.combined.
 plot.data$publication <- paste(plot.data$publication, "   ")  # Add spaces after legend titles to help with spacing
 
 p <- ggplot(aes(x=month, y=prop, fill=publication), data=plot.data)
-p + geom_area(position='stack', stat="identity") + 
+p <- p + geom_area(position='stack', stat="identity") + 
   scale_y_continuous(labels=percent) + labs(x=NULL, y=NULL) + 
   scale_fill_brewer(palette="Set1", name="") + 
   theme_bw() + theme(legend.position="bottom", legend.key.size = unit(.7, "line"))
+
+ggsave(plot=p, filename="../Output/figure_2.pdf", width=7, height=5, units="in")
