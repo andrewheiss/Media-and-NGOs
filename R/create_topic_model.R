@@ -119,11 +119,11 @@ topic.docs.norm <- normalize.topics(doc.topics)  # Normalized
 # Add short names for topics
 #-----------------------------
 colnames(topic.keys.result) <- c("key", "dirichlet", "topic.words")
-short.names <- c("National government", "Morsi and the constitution", "Environmental issues",
-                 "World Bank and Egypt", "Police arrests", "Protests and clashes", 
-                 "Sexual violence", "Police torture", "Elections", "Human rights", 
-                 "Revolution", "Business and government", "Egyptian workers", 
-                 "Trials", "Religious issues", "Legislation", "Morsi and human rights",
+short.names <- c("National government", "Draft constitution", "Environmental issues",
+                 "Development", "Police arrests", "Protests and clashes", 
+                 "Sexual violence", "Police torture", "Elections", "Human rights and civil society", 
+                 "Post-revolutionary Egypt", "Business and government", "Egyptian workers", 
+                 "Trials", "Religious issues", "Legislation", "Morsi and press freedom",
                  "SCAF", "Youth in the street", "Christian issues")
 topic.keys.result$short.names <- short.names
 
@@ -132,3 +132,8 @@ topic.keys.result$short.names <- short.names
 # Save everything
 #------------------
 save(ngos, topic.keys.result, topic.docs, topic.docs.norm, file="topic_model.RData")
+
+# Export CSV of topic proportions in documents
+topic.docs.export <- topic.docs.norm
+colnames(topic.docs.export) <- c(short.names, "Publication")
+write.csv(x=topic.docs.export, file="../Output/topic-docs.csv", row.names=TRUE)
