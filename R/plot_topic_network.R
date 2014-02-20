@@ -52,7 +52,7 @@ cor.dendro <- as.dendrogram(cor.cluster)  # Convert cluster to dendrogram
 # Get pieces for arcplot
 values <- colSums(cors)  # Sum of correlations for edge values
 edges <- melt(cors)  # Convert to long
-edges <- out[out[, 3] >= 0, ]  # Get rid of negative correlations
+edges <- edges[edges[, 3] >= 0.1, ]  # Get rid of negative and small correlations
 colnames(edges) <- c("Source","Target","Weight")
 edgelist <- as.matrix(edges[, 1:2])  # Create edgelist
 
@@ -63,8 +63,9 @@ arcs.order <- order.dendrogram(cor.dendro)
 pdf(file="../Output/arcs.pdf", width=3, height=5)
 arcplot(edgelist, lwd.arcs=20 * edges[,3], 
         show.nodes=TRUE, sorted=TRUE, ordering=arcs.order, 
-        col.labels="red", col.arcs="#ff7f00", horizontal=FALSE)
+        show.labels=FALSE, col.arcs="#ff7f00", horizontal=FALSE)
 dev.off()
+
 # Bonus!
 # This will rotate the graph by 180°, but it doesn't work in RStudio, and it can't flip the graph.
 # So we need to use Photoshop to get the arcs and dendrogram to align
