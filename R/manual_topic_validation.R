@@ -24,13 +24,18 @@ validation$article <- factor(regmatches(row.names(validation), regexpr("^[^\\.]+
 validation.long <- melt(validation, id="article", variable.name="topic", value.name="proportion")
 validation.long$label <- factor(validation.long$topic, labels=topic.keys.result$short.names)
 
+# Get reverse topic order for correct plotting
+topic.order <- topic.keys.result[order(topic.keys.result$dirichlet, decreasing=FALSE), "short.names"]
+validation.long$label <- factor(validation.long$label, levels=topic.order, ordered=TRUE)
 
 # Plot the topic proportions for sampled articles 
 p <- ggplot(validation.long, aes(x=label, y=proportion))
-p + geom_bar(stat="identity") + coord_flip() + facet_wrap(~ article) + 
+p <- p + geom_bar(stat="identity") + coord_flip() + facet_wrap(~ article) + 
   scale_y_continuous(labels=percent) + 
-  labs(x=NULL, y=NULL) + theme_bw()
+  labs(x=NULL, y=NULL) + theme_bw(8)
+p
 
+ggsave(plot=p, filename="../Output/validation.pdf", width=5.5, height=4, units="in")
 
 # Extract articles from the corpus
 get.article <- function(publication.id) {
