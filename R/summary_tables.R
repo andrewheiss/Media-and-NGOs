@@ -27,7 +27,7 @@ summarize.data <- function(df.all, df.ngos) {
   num.articles.ngos <- nrow(df.ngos)
   num.words.ngos <- sum(df.ngos$article_word_count)
   proportion.articles.ngos <- num.articles.ngos / num.articles
-  return(data.frame(num.articles, num.words, num.articles.ngos, num.words.ngos, proportion.articles.ngos))
+  return(data.frame(num.articles, num.words, num.articles.ngos, proportion.articles.ngos))
 }
 
 # Build table
@@ -37,14 +37,16 @@ table.output <- rbind(summarize.data(ahram.articles, ahram.ngos),
 table.output <- rbind(table.output, colSums(table.output))
 
 # Fix total proportion cell, since it's not just the sum of the other rows
-table.output[4,5] <- table.output[4,3] / table.output[4,1]
+table.output[4,4] <- table.output[4,3] / table.output[4,1]
+
+# Format as percent
+table.output$proportion.articles.ngos <- paste(formatC(100 * table.output$proportion.articles.ngos, format="f", digits=2), "%", sep = "")
 
 # Add pretty names
 publication.rows <- c("Al-Ahram English", "Daily News Egypt", "Egypt Independent", "Total")
 table.output <- cbind(publication=publication.rows, table.output)
-header.names <- c("Publication", "Number of articles", "Number of words", 
-                  "Number of articles that mention NGOs", "Number of words in articles that mention NGOs",
-                  "Proportion of NGO articles")
+header.names <- c("Publication", "Articles", "Words", 
+                  "Articles (NGOs)", "NGO articles (%)")
 colnames(table.output) <- header.names
 
 
@@ -59,8 +61,8 @@ print(xtable(pretty.output, caption="Table 1: Corpus summary"),
       type="html", file="../Output/table_1.html", include.rownames=FALSE, caption.placement="top")
 
 # LaTeX
-print(xtable(pretty.output, caption="Table 1: Corpus summary"), 
-      type="latex", file="../Output/table_1.tex", include.rownames=FALSE, caption.placement="top")
+print(xtable(pretty.output, caption="Corpus summary"), 
+      type="latex", file="../Output/corpus_summary.tex", include.rownames=FALSE, caption.placement="top", size="small")
 
 # Word
 output <- RTF("../Output/table_1.docx", width=8.5, height=11)
@@ -75,7 +77,7 @@ done(output)
 # Export list of NGOs
 #----------------------
 # Add enough NAs to coerce list into a matrix
-num.columns <- 3
+num.columns <- 1
 cells.to.add <- num.columns - (length(ngos) %% num.columns)
 ngo.output <- matrix(c(sort(ngos), rep(NA, cells.to.add)), ncol=num.columns)
 
@@ -87,7 +89,7 @@ print(xtable(ngo.output, caption="List of NGOs"),
 # LaTeX
 print(xtable(ngo.output, caption="List of NGOs"), 
       type="latex", file="../Output/list.tex", 
-      include.rownames=FALSE, include.colnames=FALSE, caption.placement="top")
+      include.rownames=FALSE, include.colnames=FALSE, caption.placement="top", size="footnotesize")
 
 # Word
 output <- RTF("../Output/list.docx", width=8.5, height=11)
@@ -95,4 +97,31 @@ addText(output, "List of NGOs", bold=TRUE)
 # addText(output, "Corpus summary")
 addNewLine(output)
 addTable(output, ngo.output, font.size=9, row.names=FALSE, NA.string="")
+done(output)
+
+
+#----------------------
+# Topic model summary
+#----------------------
+topic.summary <- topic.keys.result[c("dirichlet", "topic.words", "short.names")]
+topic.summary <- topic.summary[order(topic.summary$dirichlet, decreasing=TRUE), ]
+colnames(topic.summary) <- c("Dirichlet parameter", "Top ten words", "Short name")
+rownames(topic.summary) <- 1:nrow(topic.summary)
+
+# HTML
+print(xtable(topic.summary, caption="Topic model summary"), 
+      type="html", file="../Output/topic-model-summary.html", 
+      include.rownames=TRUE, caption.placement="top")
+
+# LaTeX
+print(xtable(topic.summary, caption="Topic model summary"), 
+      type="latex", file="../Output/topic-model-summary.tex", 
+      include.rownames=TRUE, caption.placement="top", size="tiny")
+
+# Word
+output <- RTF("../Output/topic-model-summary.docx", width=8.5, height=11)
+addText(output, "Topic model summary", bold=TRUE)
+# addText(output, "Corpus summary")
+addNewLine(output)
+addTable(output, ngo.output, font.size=9, row.names=TRUE, NA.string="")
 done(output)
