@@ -82,6 +82,6 @@ p <- ggplot(aes(x=month, y=prop, fill=publication), data=plot.data)
 p <- p + geom_area(position='stack', stat="identity") + 
   scale_y_continuous(labels=percent) + labs(x=NULL, y=NULL) + 
   scale_fill_brewer(palette="Set1", name="") + 
-  theme_bw() + theme(legend.position="bottom", legend.key.size = unit(.7, "line"))
+  theme_bw(10) + theme(legend.position="bottom", legend.key.size = unit(.7, "line"))
 
-ggsave(plot=p, filename="../Output/figure_2.pdf", width=7, height=5, units="in")
+ggsave(plot=p, filename="../Output/figure_2.pdf", width=5.5, height=4, units="in")
