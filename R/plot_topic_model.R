@@ -21,7 +21,7 @@ load("topic_model.RData")
 
 # Add publication name
 topic.docs.norm$publication <- factor(regmatches(row.names(topic.docs.norm), regexpr("^[^_]+", row.names(topic.docs.norm))), 
-                                      labels=c("Al-Ahram English", "Daily News Egypt", "Egypt Independent"))
+                                      labels=c("Al-Ahram English", "Daily News Egypt", "Egypt Independent"), ordered=TRUE)
 
 # Calculate means and standard deviations of normalized proportions
 topic.means.wide <- ddply(topic.docs.norm, ~ publication, colwise(mean))  # TODO: colwise custom function that returns mean and sd?
@@ -31,6 +31,10 @@ topic.means.long$label <- factor(topic.means.long$topic, labels=topic.keys.resul
 topic.sds.wide <- ddply(topic.docs.norm, ~ publication, colwise(sd))
 topic.sds.long <- melt(topic.sds.wide, id="publication", variable.name="topic", value.name="stdev")
 topic.means.long$stdev <- topic.sds.long$stdev
+
+# Get reverse topic order for correct plotting
+topic.order <- topic.keys.result[order(topic.keys.result$dirichlet, decreasing=FALSE), "short.names"]
+topic.means.long$label <- factor(topic.means.long$label, levels=topic.order, ordered=TRUE)
 
 #-------------
 # Plot stuff
@@ -47,37 +51,47 @@ difference.from.second <- function(x) {
   df <- data.frame(publication, diff.from.2nd)
 }
 
-# Add spaces after legend titles to help with spacing
-topic.means.long$publication <- paste(topic.means.long$publication, "   ")  
 
 # Bar plot of absolute proportions
-p <- ggplot(topic.means.long, aes(x=label, y=proportion))
-p + geom_bar(stat="identity") + facet_wrap(~ publication) + 
+absolute.plot <- ggplot(topic.means.long, aes(x=label, y=proportion, fill=publication))
+absolute.plot <- absolute.plot + geom_bar(stat="identity") + facet_wrap(~ publication) + 
   scale_y_continuous(labels=percent) + coord_flip() + 
   labs(x=NULL, y=NULL) + 
-  theme_bw()
-#   geom_errorbar(aes(ymin=proportion-stdev, ymax=proportion+stdev))
+  theme_bw(8) + scale_fill_brewer(palette="Set1", guide=FALSE)
+
+ggsave(plot=absolute.plot, filename="../Output/absolute-plot.pdf", width=5.5, height=4, units="in")
 
 # Bar plot of distance from #1 and #2
 diff.means <- ddply(topic.means.long, ~ label, difference.from.second)
-p <- ggplot(diff.means, aes(x=label, y=diff.from.2nd, fill=publication))
-p + geom_bar(stat="identity") + 
+diff.means$publication <- factor(paste(diff.means$publication, "   "), ordered=TRUE)  # Add spaces after legend titles to help with spacing
+
+diff.plot <- ggplot(diff.means, aes(x=label, y=diff.from.2nd, fill=publication))
+diff.plot <- diff.plot + geom_bar(stat="identity") + 
   scale_y_continuous(labels=percent) + coord_flip() + 
   scale_fill_brewer(palette="Set1", name="") + 
   labs(x=NULL, y=NULL) + 
-  theme_bw() + theme(legend.position="bottom", legend.key.size = unit(.7, "line"))
+  theme_bw(8) + theme(legend.position="bottom", legend.key.size = unit(.7, "line"))
 
-# Bar plot and jittered points of absolute proportions
-plot.data <- melt(data=topic.docs.norm, id.vars="publication")  # Use full data instead of generated means
-plot.data$label <- factor(plot.data$variable, labels=topic.keys.result$short.names)
-p <- ggplot(data=plot.data, aes(x=label, y=value))
+ggsave(plot=diff.plot, filename="../Output/diff-plot.pdf", width=5.5, height=4, units="in")
 
-# Just jittering
-p + geom_point(position="jitter", alpha=0.4) + coord_flip() + facet_wrap(~ publication) + theme_bw()
 
-# Jittering + bar plot
-p + stat_summary(aes(group=1), fun.y=mean, geom="bar") + 
-  geom_point(position="jitter", alpha=0.4) + coord_flip() + facet_wrap(~ publication) + theme_bw()
+#--------------
+# Other plots
+#--------------
+# # Bar plot and jittered points of absolute proportions
+# plot.data <- melt(data=topic.docs.norm, id.vars="publication")  # Use full data instead of generated means
+# plot.data$label <- factor(plot.data$variable, labels=topic.keys.result$short.names)
+# # Fix order
+# plot.data$label <- factor(plot.data$label, levels=topic.order, ordered=TRUE)
+# 
+# p <- ggplot(data=plot.data, aes(x=label, y=value))
+# 
+# # Just jittering
+# p + geom_point(position="jitter", alpha=0.4) + coord_flip() + facet_wrap(~ publication) + theme_bw()
+# 
+# # Jittering + bar plot
+# p + stat_summary(aes(group=1), fun.y=mean, geom="bar") + 
+#   geom_point(position="jitter", alpha=0.4) + coord_flip() + facet_wrap(~ publication) + theme_bw()
 
 # Violin plots (really hard to read)
 # p + geom_violin(size=0.25) +
