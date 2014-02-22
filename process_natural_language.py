@@ -42,8 +42,9 @@ stemmer = nltk.stem.snowball.EnglishStemmer()  # Newest, made by Porter in 2001(
 # So this enforces sentence boundaries manually and only calculate n-grams within sentences. 
 
 # Remove stopwords, stem, and then tokenize and n-gramize each sentence individually. 
-# Output is saved to all_grams[], which gets flattened in the end
-all_grams = []
+# Output is saved to final_tokens[]
+vocabulary = []
+final_tokens = []
 for sentence in sentences:
   words = sentence.split()
 
@@ -54,16 +55,26 @@ for sentence in sentences:
   stemmed = [stemmer.stem(word) for word in no_stopwords]
 
   # Tokenize and make n-grams of stemmed words
-  stemmed_tokens = nltk.word_tokenize(" ".join(stemmed))  # word_tokenize requires a string, not a list
-  grams = nltk.bigrams(stemmed_tokens)  # or nltk.ngrams(stemmed_tokens, 2)
-  all_grams.append(grams)
+  unigrams = stemmed
 
-grams = [item for sublist in all_grams for item in sublist]  # Flatten list
+  stemmed_tokens = nltk.word_tokenize(" ".join(stemmed))  # word_tokenize requires a string, not a list
+  bigrams = nltk.bigrams(stemmed_tokens)  # or nltk.ngrams(stemmed_tokens, 2)
+  trigrams = nltk.trigrams(stemmed_tokens)  # or nltk.ngrams(stemmed_tokens, 3)
+  quadgrams = nltk.ngrams(stemmed_tokens, 4)
+
+  # Add to list
+  final_tokens.extend(unigrams)
+  final_tokens.extend(bigrams)
+  final_tokens.extend(trigrams)
+  final_tokens.extend(quadgrams)
+
+  vocabulary.append(final_tokens)
+
 
 # n-gram distributions
-fdist = nltk.FreqDist(grams)
-for k, v in fdist.items():
-  print k, v
+# fdist = nltk.FreqDist(final_tokens)
+# for k, v in fdist.items():
+#   print k, v
 
 # Use tf-idf to determine if n-gram is important: https://gist.github.com/AloneRoad/1605037, http://yasserebrahim.wordpress.com/2012/10/25/tf-idf-with-pythons-nltk/
 
