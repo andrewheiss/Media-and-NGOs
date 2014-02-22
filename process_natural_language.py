@@ -3,6 +3,7 @@
 import re
 import string
 import nltk
+import math
 
 sample_text = u"""Abortion in Egypt: Whose choice?
 
@@ -70,14 +71,72 @@ for sentence in sentences:
 
   vocabulary.append(final_tokens)
 
+docs = {}
+docs[0] = {'freq': {}, 'tf': {}, 'idf': {},
+           'tf-idf': {}, 'tokens': []}
+
+
+def freq(word, doc):
+  return(doc.count(word))
+
+def word_count(doc):
+  return(len(doc))
+
+def tf(word, doc):
+  return((freq(word, doc) / float(word_count(doc))))
+ 
+def num_docs_containing(word, list_of_docs):
+  count = 0
+  for document in list_of_docs:
+    if freq(word, document) > 0:
+      count += 1
+  return(1 + count)
+
+def idf(word, list_of_docs):
+  return(math.log(len(list_of_docs) / float(num_docs_containing(word, list_of_docs))))
+ 
+def tf_idf(word, doc, list_of_docs):
+  return((tf(word, doc) * idf(word, list_of_docs)))
+
+
+for token in final_tokens:
+  docs[0]['freq'][token] = freq(token, final_tokens)
+  docs[0]['tf'][token] = tf(token, final_tokens)
+  docs[0]['tokens'] = final_tokens
+
+# print(final_tokens)
+# print(docs)
+
+for doc in docs:
+  for token in docs[doc]['tf']:
+    #The Inverse-Document-Frequency
+    docs[doc]['idf'][token] = idf(token, vocabulary)
+    #The tf-idf
+    docs[doc]['tf-idf'][token] = tf_idf(token, docs[doc]['tokens'], vocabulary)
+
+words = {}
+for doc in docs:
+  for token in docs[doc]['tf-idf']:
+    if token not in words:
+      words[token] = docs[doc]['tf-idf'][token]
+    else:
+      if docs[doc]['tf-idf'][token] > words[token]:
+        words[token] = docs[doc]['tf-idf'][token]
+
+  # print doc
+  # for token in docs[doc]['tf-idf']:
+    # print token, docs[doc]['tf-idf'][token]
+ 
+for item in sorted(words.items(), key=lambda x: x[1], reverse=True):
+  print "%f <= %s" % (item[1], item[0])
 
 # n-gram distributions
 # fdist = nltk.FreqDist(final_tokens)
 # for k, v in fdist.items():
 #   print k, v
 
-# Use tf-idf to determine if n-gram is important: https://gist.github.com/AloneRoad/1605037, http://yasserebrahim.wordpress.com/2012/10/25/tf-idf-with-pythons-nltk/
-
+# Use tf-idf to determine if n-gram is important: https://gist.github.com/marcelcaraciolo/1604487
+# TODO: Make this work on actual multiple documents
 
 # Join significant n-grams with underscore
 # Make sure MALLET doesn't throw away underscored words: add `--token-regex "\\w+"` to import-dir command
