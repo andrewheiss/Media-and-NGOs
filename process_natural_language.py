@@ -12,9 +12,9 @@ Although legal, religious and social regulations bar women in Egypt from termina
 Scientifically, abortion is conducted through medical or surgical procedures. Medical abortion, when the foetus is completely dislodged from the uterus, is carried out using certain drugs. Dr. Hussein Gohar, Head of Gohar Women’s Health Clinic, explains there are two drugs used in abortion: Mifepristone and Misoprostol, or what is known in pharmacies as Misotac. The latter medication should be taken 48 hours after the first. “When taken together within this time frame, the success rate of abortion exceeds 90%,” he says. Mifepristone inhibits the hormone progesterone, which is responsible for maintaining pregnancy, whereas Misoprostol triggers strong uterine contractions that dislodge the foetus from the uterine walls.  Some women find it easier to end their pregnancies by using the medical procedure as a first step to secret abortion. Mifepristone is not available in Egypt. Therefore, women can only take Misotac."""
 
 
-#------------
-# Sentences
-#------------
+#---------------
+# Set up stuff
+#---------------
 # Helper function to strip punctuation
 def remove_punc(text):
   punc = string.punctuation.replace('-', '') + u'–—”’“‘ '  # Define punctuation
@@ -25,40 +25,36 @@ def remove_punc(text):
 # Divide text into sentences, bounded by ? and . and \n
 sentences = [remove_punc(sentence).strip() for sentence in re.split('\.|\?|\\n', sample_text) if sentence != '']
 
+# Load MALLET stopwords
+stopwords = set([word.strip() for word in open("R/stopwords.txt", "r")])  # Using set() speeds up "not in" searches
 
-#-------------------
-# Remove stopwords
-#-------------------
-# TODO: Stopwords?
-# See http://stackoverflow.com/questions/19130512/stopword-removal-with-nltk
-# But use the MALLET list, saving it to a set?
-
-
-#-----------
-# Stemming
-#-----------
-# Stem words in the sentences
-snowball = nltk.stem.snowball.EnglishStemmer()
-# porter = nltk.stem.porter.PorterStemmer()
-# lancaster = nltk.stem.lancaster.LancasterStemmer()
-
-stemmed_sentences = []
-for sentence in sentences:
-  stemmed = [snowball.stem(word) for word in sentence.split()]
-  stemmed_sentences.append(" ".join(stemmed))
+# Select the stemming algorithm
+stemmer = nltk.stem.snowball.EnglishStemmer()  # Newest, made by Porter in 2001(?)
+# stemmer = nltk.stem.porter.PorterStemmer()  # From 1980
+# stemmer = nltk.stem.lancaster.LancasterStemmer()  # From 1990
 
 
-#----------
-# n-grams
-#----------
+#---------------
+# Process text
+#---------------
 # "NLTK taggers are designed to work with lists of sentences, where each sentence is a list of words" (http://www.nltk.org/book/ch05.html)
 # But feeding the word_tokenize() function a list of sentences breaks it, and feeding it sentencified text (joining the list of sentences with .s) captures n-grams across sentence boundaries.
 # So this enforces sentence boundaries manually and only calculate n-grams within sentences. 
 
-# Tokenize and n-gramize each sentence individually, saving to all_grams[], which gets flattened in the end
+# Remove stopwords, stem, and then tokenize and n-gramize each sentence individually. 
+# Output is saved to all_grams[], which gets flattened in the end
 all_grams = []
-for sentence in stemmed_sentences:
-  stemmed_tokens = nltk.word_tokenize(sentence)
+for sentence in sentences:
+  words = sentence.split()
+
+  # Remove stopwords
+  no_stopwords = [word for word in words if word not in stopwords]
+
+  # Stem the remaining words
+  stemmed = [stemmer.stem(word) for word in no_stopwords]
+
+  # Tokenize and make n-grams of stemmed words
+  stemmed_tokens = nltk.word_tokenize(" ".join(stemmed))  # word_tokenize requires a string, not a list
   grams = nltk.bigrams(stemmed_tokens)  # or nltk.ngrams(stemmed_tokens, 2)
   all_grams.append(grams)
 
@@ -73,4 +69,4 @@ for k, v in fdist.items():
 
 
 # Join significant n-grams with underscore
-# Make sure MALLET doesn't throw away underscored words
+# Make sure MALLET doesn't throw away underscored words: add `--token-regex "\\w+"` to import-dir command
