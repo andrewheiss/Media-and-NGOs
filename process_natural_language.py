@@ -26,6 +26,7 @@ stemmer = nltk.stem.snowball.EnglishStemmer()  # Newest, made by Porter in 2001(
 
 # Minimum n-gram frequency
 bigram_min = 10
+trigram_min = 10
 
 
 #-------------------
@@ -93,8 +94,6 @@ for text_file in documents:
 #------------------------------------------
 # See https://nltk.googlecode.com/svn/trunk/doc/howto/collocations.html
 
-ngram_limit = int(len(token_list) * 0.1)
-
 # Bigrams
 bigram_measures = nltk.collocations.BigramAssocMeasures()
 bigram_finder = BigramCollocationFinder.from_words(token_list)
@@ -102,6 +101,7 @@ bigram_finder.apply_freq_filter(bigram_min)
 
 # Get top bigrams
 # Tecnically .nbest() is easier, but it doesn't return the actual association score
+# ngram_limit = int(len(token_list) * 0.1)
 # bigrams_pmi = bigram_finder.nbest(bigram_measures.pmi, ngram_limit)
 
 # So use .score_ngrams() and subset the list manually
@@ -128,7 +128,7 @@ print(bigrams_sig)
 # trigram_finder = TrigramCollocationFinder.from_words(token_list)
 # trigram_finder.apply_freq_filter(trigram_min)
 
-# trigrams_pmi = trigram_finder.nbest(trigram_measures.pmi, ngram_limit)
-# print(trigrams_pmi)
+# trigrams_likerat = trigram_finder.score_ngrams(trigram_measures.likelihood_ratio)
+# print(trigrams_likerat[:10])
 
 
