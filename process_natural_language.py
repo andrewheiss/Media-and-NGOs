@@ -3,14 +3,18 @@
 import re
 import string
 import nltk
+from nltk.collocations import *
 import math
 import glob
 import codecs
 from collections import defaultdict
 
 
+#------------
+# Variables
+#------------
 # Mallet input files
-path_to_documents = "mallet_test/*"
+path_to_documents = "R/mallet_input/*"
 
 # Load MALLET stopwords
 stopwords = set([word.strip() for word in open("R/stopwords.txt", "r")])  # Using set() speeds up "not in" searches
@@ -19,6 +23,9 @@ stopwords = set([word.strip() for word in open("R/stopwords.txt", "r")])  # Usin
 stemmer = nltk.stem.snowball.EnglishStemmer()  # Newest, made by Porter in 2001(?)
 # stemmer = nltk.stem.porter.PorterStemmer()  # From 1980
 # stemmer = nltk.stem.lancaster.LancasterStemmer()  # From 1990
+
+# Minimum n-gram frequency
+bigram_min = 10
 
 
 #-------------------
@@ -32,32 +39,6 @@ def remove_punc(text):
   return(content_no_punc)
 
 
-# tf-idf stuff
-def freq(word, doc):
-  return(doc.count(word))
-
-def word_count(doc):
-  return(len(doc))
-
-def tf(word, doc):
-  return((freq(word, doc) / float(word_count(doc))))
- 
-def num_docs_containing(word, list_of_docs):
-  count = 0
-  for document in list_of_docs:
-    if freq(word, document) > 0:
-      count += 1
-  return(1 + count)
-
-def idf(word, list_of_docs):
-  return(math.log(len(list_of_docs) / float(num_docs_containing(word, list_of_docs))))
- 
-def tf_idf(word, doc, list_of_docs):
-  return((tf(word, doc) * idf(word, list_of_docs)))
-
-
-documents = glob.glob(path_to_documents)
-
 #---------------
 # Process text
 #---------------
@@ -69,11 +50,12 @@ documents = glob.glob(path_to_documents)
 #   (1) appended to the corpus vocabulary list, and 
 #   (2) used to generate the document's tf
 
+# Load documents
+documents = glob.glob(path_to_documents)
+
 # Initialize corpus-wide variables
 vocabulary = []
 token_list = []
-docs = {}
-num_unigrams = 0
 
 for text_file in documents:
 # For the tf-idf version, since the document dictionary needs an integer index
@@ -98,97 +80,55 @@ for text_file in documents:
     # Stem the remaining words
     stemmed = [stemmer.stem(word) for word in no_stopwords]
 
-    # Tokenize and make n-grams of stemmed words
-    unigrams = stemmed
-
-    stemmed_tokens = nltk.word_tokenize(" ".join(stemmed))  # word_tokenize requires a string, not a list
-    bigrams = nltk.bigrams(stemmed_tokens)  # or nltk.ngrams(stemmed_tokens, 2)
-    trigrams = nltk.trigrams(stemmed_tokens)  # or nltk.ngrams(stemmed_tokens, 3)
-    quadgrams = nltk.ngrams(stemmed_tokens, 4)
-
     # Add tokens to list
-    num_unigrams += len(unigrams)
-    document_tokens.extend(unigrams)
-    document_tokens.extend(bigrams)
-    # document_tokens.extend(trigrams)
-    # document_tokens.extend(quadgrams)
+    document_tokens.extend(stemmed)
 
   # Add tokens to corpus vocabulary
   # vocabulary.append(document_tokens)  # For tf-idf version, vocabulary list needs to be a nested list [[x,x], [x,x]]
   token_list.extend(document_tokens)  # For frequency version, vocabulary list just needs to be a list [x, x, x]
 
-  #-----------
-  # tf stuff
-  #-----------
-  # # Create a new tf dictionary 'row'
-  # docs[i] = {'freq': {}, 'tf': {}, 'idf': {},
-  #          'tf-idf': {}, 'tokens': []}
 
-  # # Calculate the tf for all tokens
-  # for token in document_tokens:
-  #   # Frequency of each token
-  #   docs[i]['freq'][token] = freq(token, document_tokens)
+#------------------------------------------
+# Find most important bigram collocations
+#------------------------------------------
+# See https://nltk.googlecode.com/svn/trunk/doc/howto/collocations.html
 
-  #   # Normalized tf (term frequency) for each token
-  #   docs[i]['tf'][token] = tf(token, document_tokens)
-  #   docs[i]['tokens'] = document_tokens
+ngram_limit = int(len(token_list) * 0.1)
 
-#---------------
-# tf-idf stuff
-#---------------
-# Use tf-idf to determine if n-gram is important: https://gist.github.com/marcelcaraciolo/1604487 - http://aimotion.blogspot.com/2011/12/machine-learning-with-python-meeting-tf.html
+# Bigrams
+bigram_measures = nltk.collocations.BigramAssocMeasures()
+bigram_finder = BigramCollocationFinder.from_words(token_list)
+bigram_finder.apply_freq_filter(bigram_min)
 
-# # Loop through each document and figure out the tf-idf
-# for doc in docs:
-#   for token in docs[doc]['tf']:
-#     # Inverse document frequency (idf)
-#     docs[doc]['idf'][token] = idf(token, vocabulary)
+# Get top bigrams
+# Tecnically .nbest() is easier, but it doesn't return the actual association score
+# bigrams_pmi = bigram_finder.nbest(bigram_measures.pmi, ngram_limit)
 
-#     # tf-idf for tokens
-#     docs[doc]['tf-idf'][token] = tf_idf(token, docs[doc]['tokens'], vocabulary)
+# So use .score_ngrams() and subset the list manually
+bigrams_likerat = bigram_finder.score_ngrams(bigram_measures.likelihood_ratio)
 
+# Select only super significant bigrams
+# Instead of making people install scipy, it's probably easiest to just use R for the stats stuff
+# scipy.stats.chi2.ppf(0.999, 1) = qchisq(0.999, df=1) = 10.82757
+crit_value = 10.82757
+bigrams_sig = [bigram for bigram in bigrams_likerat if bigram[1] > crit_value]
 
-# words = {}  # Keep track of words
-# for doc in docs:
-# #   # Look at each token in the corpus tf-idf...
-#   for token in docs[doc]['tf-idf']:
-#     # Store the highest tf-idf value for each word
-#     if token not in words:
-#       words[token] = docs[doc]['tf-idf'][token]
-#     else:
-#       if docs[doc]['tf-idf'][token] > words[token]:
-#         words[token] = docs[doc]['tf-idf'][token]
+print(bigrams_sig)
+
+# Make a table like p. 163 in Manning and Schutze for top x bigrams?
+# Plot likelihood ratio for bigrams, just for fun?
 
 
-# # Print word list, sorted by tf-idf value
-# for item in sorted(words.items(), key=lambda x: x[1], reverse=True):
-#   print "{0:.10f} <= {1}".format(item[1], item[0])
+
+# Trigrams
+# Necessary? Tricky because stuff like "human right" is a significant bigram,
+# but also present in lots of trigrams: "violat human right", "human right
+# group", "human right lawyer", etc.
+# trigram_measures = nltk.collocations.TrigramAssocMeasures()
+# trigram_finder = TrigramCollocationFinder.from_words(token_list)
+# trigram_finder.apply_freq_filter(trigram_min)
+
+# trigrams_pmi = trigram_finder.nbest(trigram_measures.pmi, ngram_limit)
+# print(trigrams_pmi)
 
 
-#------------------------
-# Token frequency stuff
-#------------------------
-# David Banks: "one gets the frequencies of the tokens in the total corpus, and then looks for digrams, trigrams, etc. that co-occur more often than the product of their frequencies"
-# Create dictionary of token frequencies
-
-tokens = defaultdict(int)
-for token in token_list:
-  tokens[token] += 1
-
-
-for item in sorted(tokens.items(), key=lambda x: x[1], reverse=True):
-  print "{0} ({1}) {2}".format(item[1], item[1]/float(num_unigrams), item[0])
-
-# Join significant n-grams with underscore
-# Make sure MALLET doesn't throw away underscored words: add `--token-regex "\\w+"` to import-dir command
-
-
-# # n-gram distributions
-# fdist = nltk.FreqDist(token_list)
-# # thing = fdist.plot(cumulative=True)
-# for k, v in fdist.items():
-#   print k, v, "{0:.10f}".format(fdist.freq(k))
-
-# Better NLTK way: look for statisticaly significant collocations
-# http://stackoverflow.com/questions/2452982/how-to-extract-common-significant-phrases-from-a-series-of-text-entries
-# https://nltk.googlecode.com/svn/trunk/doc/howto/collocations.html
