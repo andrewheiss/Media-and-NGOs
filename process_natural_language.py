@@ -4,10 +4,8 @@ import re
 import string
 import nltk
 from nltk.collocations import *
-import math
 import glob
 import codecs
-from collections import defaultdict
 
 
 #------------
