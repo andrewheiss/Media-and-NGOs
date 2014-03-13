@@ -1,7 +1,7 @@
 # Title:          manual_topic_validation.R
 # Description:    Select random articles from the topic model, graph their topics, and output their content
 # Author:         Andrew Heiss
-# Last updated:   2013-12-26
+# Last updated:   2014-03-13
 # R version:      ≥3.0
 
 # Load libraries and set variables
@@ -79,13 +79,13 @@ sink(file=NULL)
 # Get the topics assigned to each of the words in the sampled articles
 #-----------------------------------------------------------------------
 # Read the huge words database 
-# TODO: Make this more dynamic, since `topic-state.gz` is actually user configurable in `load_data.R`
+# TODO: Make this more dynamic, since `topic-state.gz` and `mallet_stemmed` are actually user configurable in `load_data.R`
 everything <- read.table("topic-state.gz")
 colnames(everything) <- c("doc", "source.file", "pos", "typeindex", "type", "topic")
 
 # Build list of filenames to select
 full.text$publication <- ifelse(full.text$publication == "egind", "egypt_independent", full.text$publication)
-articles.to.select <- paste("mallet_input/", full.text$publication, "_", full.text$id_article, ".txt", sep="")
+articles.to.select <- paste("mallet_stemmed/", full.text$publication, "_", full.text$id_article, ".txt", sep="")
 
 # Select them
 article.words <- subset(everything, everything$source.file %in% articles.to.select)
