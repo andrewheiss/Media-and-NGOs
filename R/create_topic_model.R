@@ -69,6 +69,7 @@ system(mallet.command)
 topic.keys.result <- read.table(output.topickeys, header=F, sep="\t")
 doc.topics.result <- read.table(output.doctopics, header=F, sep="\t")
 
+# MAYBE: Make this *actually* look for (and remove?) the .DS_Store file?
 if(nrow(doc.topics.result) != 515) {
   stop("MALLET accidentally parsed an extra file (like .DS_Store). Delete it manually and rerun this file.")
 }
@@ -131,15 +132,24 @@ colnames(topic.keys.result) <- c("key", "dirichlet", "topic.words")
 #                  "SCAF", "Youth in the street", "Christian issues")
 
 # Shortnames for enhanced corpus (stemmed, n-grammed)
-short.names <- c("Police torture", "Sexual violence", "Media and censorship", 
-                 "Sectarian issues", "Egyptian workers", "Religious issues", 
-                 "Police violence", "Business", "Protests and clashes", 
-                 "Muslim Brotherhood and constitution", "Elections", "Military trials", 
-                 "Legislation and governance", "Environmental issues", 
-                 "Human rights and civil society", "Protestors and activism", 
-                 "Public economics", "Police arrests", "Muslim Brotherhood and politics", 
-                 "Post-revolutionary Egypt (catch-all)")
-topic.keys.result$short.names <- short.names
+# short.names <- c("Police torture", "Sexual violence", "Media and censorship", 
+#                  "Sectarian issues", "Egyptian workers", "Religious issues", 
+#                  "Police violence", "Business", "Protests and clashes", 
+#                  "Muslim Brotherhood and constitution", "Elections", "Military trials", 
+#                  "Legislation and governance", "Environmental issues", 
+#                  "Human rights and civil society", "Protestors and activism", 
+#                  "Public economics", "Police arrests", "Muslim Brotherhood and politics", 
+#                  "Post-revolutionary Egypt (catch-all)")
+# topic.keys.result$short.names <- short.names
+
+# Control group short names
+# short.names <- c("Muslim Brotherhood and politics", "Morsi and the media", 
+#                  "Miscellaneous", "Unions and strikes", "Trials", "Egypt (catch-all)", 
+#                  "Religious issues", "Syrian civil war", "Cairo affairs", 
+#                  "Israel-Palestinian conflict", "Protests", "Foreign affairs", 
+#                  "Christian affairs", "Football", "Culture", "Regional violence", 
+#                  "Tourism", "Oil", "Social affairs", "Public economics")
+# topic.keys.result$short.names <- short.names
 
 
 #------------------
@@ -149,5 +159,5 @@ save(topic.keys.result, topic.docs, topic.docs.norm, file="topic_model.RData")
 
 # Export CSV of topic proportions in documents
 topic.docs.export <- topic.docs.norm
-colnames(topic.docs.export) <- short.names #c(short.names, "Publication")
+colnames(topic.docs.export) <- short.names
 write.csv(x=topic.docs.export, file="../Output/topic-docs.csv", row.names=TRUE)
