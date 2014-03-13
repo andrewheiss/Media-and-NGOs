@@ -12,8 +12,9 @@ library(rtf)
 base.directory <- "~/Dropbox/Media and NGOs in the ME/Media and NGOs/R"
 setwd(base.directory)
 
-# Load corpus
+# Load corpus and topic model
 load("media_data.RData")
+load("topic_model.RData")
 
 
 #-------------------------
