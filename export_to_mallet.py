@@ -4,7 +4,7 @@
 # Description:    Create a folder of individual text files for every article that mentions an 
 #                 NGO, to be used in MALLET 
 # Author:         Andrew Heiss
-# Last updated:   2013-08-19
+# Last updated:   2014-03-13
 # Python version: ≥3.0
 # Usage:          Edit the three variables below and run the script. You'll need to run 
 #                 the script for each publication. 
@@ -14,7 +14,7 @@
 #-------------------
 database = 'Corpora/dne.db'
 prefix = 'dne'
-output_folder = 'R/mallet_test'
+output_folder = 'R/mallet_control'
 
 
 #----------------------------------------------------------
@@ -22,7 +22,7 @@ output_folder = 'R/mallet_test'
 import sqlite3
 
 # List of signatory organizations in http://www.eipr.org/en/pressrelease/2013/05/30/1720
-organizations = ["The Cairo Institute for Human Rights Studies", "Misryon Against Religious Discrimination", "The Egyptian Coalition for the Rights of the Child", "Arab Program for Human Rights Activists", "Egyptian Association for Economic and Social Rights", "The Egyptian Association for Community Participation Enhancement", "Rural Development Association", "Mother Association for Rights and Development", "The Human Right Association for the Assistance of the Prisoners", "Arab Network for Human Rights Information", "The Egyptian Initiative for Personal Rights", "Initiators for Culture and Media", "The Human Rights Legal Assistance Group", "The Land Center for Human Rights", "The International Center for Supporting Rights and Freedoms", "Shahid Center for Human Rights", "Egyptian Center for Support of Human Rights", "The Egyptian Center for Public Policy Studies", "The Egyptian Center for Economic and Social Rights", "Andalus Institute for Tolerance and Anti-Violence Studies", "Habi Center for Environmental Rights", "Hemaia Center for Supporting Human Rights Defenders", "Social Democracy Studies Center", "The Hesham Mobarak Law Center", "Arab Penal Reform Organization", "Appropriate Communications Techniques for Development", "Forum for Women in Development", "Arab Penal Reform Organization", "The Egyptian Organization for Human Rights", "Tanweer Center for Development and Human Rights", "Better Life Association", "The Arab Foundation for Democracy Studies and Human Rights", "Arab Foundation for Civil Society and Human Right Support", "The New Woman Foundation", "Women and Memory Forum", "The Egyptian Foundation for the Advancement of Childhood Conditions", "Awlad Al Ard Association", "Baheya Ya Masr", "Association for Freedom of Expression and of Thought", "Center for Egyptian Women’s Legal Assistance", "Nazra for Feminist Studies"]
+organizations = ["The Cairo Institute for Human Rights Studies", "Misryon Against Religious Discrimination", "The Egyptian Coalition for the Rights of the Child", "Arab Program for Human Rights Activists", "Egyptian Association for Economic and Social Rights", "The Egyptian Association for Community Participation Enhancement", "Rural Development Association", "Mother Association for Rights and Development", "The Human Right Association for the Assistance of the Prisoners", "Arab Network for Human Rights Information", "The Egyptian Initiative for Personal Rights", "Initiators for Culture and Media", "The Human Rights Legal Assistance Group", "The Land Center for Human Rights", "The International Center for Supporting Rights and Freedoms", "Shahid Center for Human Rights", "Egyptian Center for Support of Human Rights", "The Egyptian Center for Public Policy Studies", "The Egyptian Center for Economic and Social Rights", "Andalus Institute for Tolerance and Anti-Violence Studies", "Habi Center for Environmental Rights", "Hemaia Center for Supporting Human Rights Defenders", "Social Democracy Studies Center", "The Hesham Mobarak Law Center", "Arab Penal Reform Organization", "Appropriate Communications Techniques for Development", "Forum for Women in Development", "The Egyptian Organization for Human Rights", "Tanweer Center for Development and Human Rights", "Better Life Association", "The Arab Foundation for Democracy Studies and Human Rights", "Arab Foundation for Civil Society and Human Right Support", "The New Woman Foundation", "Women and Memory Forum", "The Egyptian Foundation for the Advancement of Childhood Conditions", "Awlad Al Ard Association", "Baheya Ya Masr", "Association for Freedom of Expression and of Thought", "Center for Egyptian Women’s Legal Assistance", "Nazra for Feminist Studies"]
 
 
 #------------------------------------
@@ -34,8 +34,8 @@ c = conn.cursor()
 
 # Query using the organization names
 org_sql = ['article_content_no_punc LIKE "%'+org.lower()+'%"' for org in organizations]
-# sql_statement = 'SELECT * FROM articles WHERE ('+' OR '.join(org for org in org_sql) + ') AND article_date BETWEEN \'2011-11-24 00:00:00\' AND \'2013-04-25 23:59:59\''
-sql_statement = 'SELECT * FROM articles WHERE article_date BETWEEN \'2013-04-24 00:00:00\' AND \'2013-04-24 11:59:59\''
+sql_statement = 'SELECT * FROM articles WHERE ('+' OR '.join(org for org in org_sql) + ') AND article_date BETWEEN \'2011-11-24 00:00:00\' AND \'2013-04-25 23:59:59\''
+# sql_statement = 'SELECT * FROM articles WHERE article_date BETWEEN \'2013-04-24 00:00:00\' AND \'2013-04-24 11:59:59\''
 c.execute(sql_statement)
 
 # Fetch the results
