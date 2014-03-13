@@ -19,6 +19,8 @@ mallet/*
 R/mallet/*
 R/mallet_input/*
 R/mallet_stemmed/*
+R/mallet_control/*
+R/mallet_control_stemmed/*
 topic-doctopics.txt
 topic-keys.txt
 topic-state.gz
