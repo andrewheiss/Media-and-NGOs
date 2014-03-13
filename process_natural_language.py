@@ -42,28 +42,47 @@ def remove_punc(text):
   content_no_punc = regex.sub(' ', text.lower())  # Remove punctuation and make
   return(content_no_punc)
 
+
 # Loop through all the words in the document, find adjacent unigrams that
 # match significat bigrams, and replace them with an underscore-separated
 # token. For example, given these bigrams: 
+#
 #   bigrams = [('apple', 'orange'), ('happy', 'day'), ('big', 'house')]
+#
 # it will transform this list of words:
+#
 #   words = ['apple', 'orange', 'boat', 'car', 'happy', 'day', 'cow']
+#
 # into this:
-#   words_fixed = list(replace_bigrams(words, bigrams))
+#
+#   words_fixed = replace_bigrams(words, bigrams)
 #               = ['apple_orange', 'boat', 'car', 'happy_day', 'cow']
+#
+# This is slower than other functions that could use a dict or set (see
+# http://stackoverflow.com/questions/22366659/match-adjacent-list-elements-with-a-list-of-tuples-in-python/),
+# but it works correctly. Other methods with itertools, etc. fail because 
+# they assume unique words in each bigram and create a dict with the first 
+# word in the pair as the key.
+#
+# Actually, the biggest bottleneck is the collection of bigrams.
+# Using `set([pair[0] for pair in bigrams_significant])` runs in 15ish seconds, 
+# while `[pair[0] for pair in bigrams_significant]` takes 60ish seconds. Yikes.
+# Using a set is significantly faster, but it discards the ordering, which is bad.
+
 def replace_bigrams(words, bigrams):
-  it = iter(words)
-  dict_bigrams = dict(bigrams)
-  for x in it:
-    if x in dict_bigrams:
-      y = it.next()
-      if dict_bigrams[x] == y:
-        yield '_'.join((x,y))
-      else:
-        yield x
-        yield y
+  words_fixed = []
+  last = None
+  for word in words:
+    if (last, word) in bigrams:
+      words_fixed.append("{0}_{1}".format(last, word))
+      last = None
     else:
-      yield x
+      if last:
+        words_fixed.append(last)
+      last = word
+  if last:
+    words_fixed.append(last)
+  return(words_fixed)
 
 
 #---------------
@@ -83,7 +102,8 @@ for text_file in documents:
   words = remove_punc(document).strip().split()
 
   # Remove stopwords
-  no_stopwords = [word for word in words if word not in stopwords]
+  # al- and el- aren't taken care of in stopwords, so they have to manually be removed
+  no_stopwords = [word.replace('el-', '').replace('al-', '') for word in words if word not in stopwords]
 
   # Stem remaining words
   stemmed = [stemmer.stem(word) for word in no_stopwords]
@@ -139,7 +159,7 @@ bigrams_significant = [bigram for bigram in bigrams_likerat if bigram[1] > criti
 # Create clean, final documents
 #--------------------------------
 # Extract just the bigram tuples from the ngram score nested list
-bigrams = set([pair[0] for pair in bigrams_significant])
+bigrams = [pair[0] for pair in bigrams_significant]
 
 # Loop through all documents in the vocabulary, join/replace bigrams, and save to disk
 for document in vocabulary:
