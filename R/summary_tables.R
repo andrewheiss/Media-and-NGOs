@@ -120,9 +120,9 @@ print(xtable(topic.summary, caption="Topic model summary"),
       include.rownames=TRUE, caption.placement="top", size="tiny")
 
 # Word
-output <- RTF("../Output/topic-model-summary.docx", width=8.5, height=11)
-addText(output, "Topic model summary", bold=TRUE)
-# addText(output, "Corpus summary")
-addNewLine(output)
-addTable(output, ngo.output, font.size=9, row.names=TRUE, NA.string="")
-done(output)
+# output <- RTF("../Output/topic-model-summary.docx", width=8.5, height=11)
+# addText(topic.summary, "Topic model summary", bold=TRUE)
+# # addText(output, "Corpus summary")
+# addNewLine(output)
+# addTable(output, ngo.output, font.size=9, row.names=TRUE, NA.string="")
+# done(output)
