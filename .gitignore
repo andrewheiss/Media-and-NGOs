@@ -18,6 +18,7 @@ Corpora/*
 mallet/*
 R/mallet/*
 R/mallet_input/*
+R/mallet_stemmed/*
 topic-doctopics.txt
 topic-keys.txt
 topic-state.gz
