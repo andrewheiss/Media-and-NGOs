@@ -42,6 +42,7 @@ sql_statement = 'SELECT * FROM articles WHERE ('+' OR '.join(org for org in org_
 # so instead, we can sort by a hash of the id, multiplying by the id by a
 # random decimal number and then ignoring everything before the decimal.
 # Convoluted, but it works.
+# See http://stackoverflow.com/questions/2171578/seeding-sqlite-random
 random.seed(1234)
 pseudo_seed = random.random()
 control_statement = 'SELECT * FROM articles WHERE article_date BETWEEN \'2011-11-24 00:00:00\' AND \'2013-04-25 23:59:59\' ORDER BY (substr(id_article * ' + str(pseudo_seed) + ' , length(id_article) + 2)) LIMIT 200'
