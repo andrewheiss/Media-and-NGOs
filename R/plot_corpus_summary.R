@@ -1,7 +1,7 @@
 # Title:          graphs.R
 # Description:    Make pretty graphs
 # Author:         Andrew Heiss
-# Last updated:   2013-12-25
+# Last updated:   2014-03-13
 # R version:      ≥3.0
 
 # Load packages
@@ -78,10 +78,10 @@ dne.combined.monthly <- merge.counts(dne.monthly, dne.ngos.monthly, "Daily News 
 plot.data <- rbind(egind.combined.monthly, ahram.combined.monthly, dne.combined.monthly)
 plot.data$publication <- paste(plot.data$publication, "   ")  # Add spaces after legend titles to help with spacing
 
-p <- ggplot(aes(x=month, y=prop, fill=publication), data=plot.data)
-p <- p + geom_area(position='stack', stat="identity") + 
+p <- ggplot(aes(x=month, y=prop, colour=publication), data=plot.data)
+p <- p + geom_line(size=1) + 
   scale_y_continuous(labels=percent) + labs(x=NULL, y=NULL) + 
-  scale_fill_brewer(palette="Set1", name="") + 
-  theme_bw(10) + theme(legend.position="bottom", legend.key.size = unit(.7, "line"))
+  scale_colour_brewer(palette="Set1", name="") + 
+  theme_bw(10) + theme(legend.position="bottom", legend.key.size = unit(.7, "line"), legend.key = element_blank())
 
 ggsave(plot=p, filename="../Output/figure_2.pdf", width=5.5, height=4, units="in")

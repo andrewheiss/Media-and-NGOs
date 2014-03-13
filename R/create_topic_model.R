@@ -1,7 +1,7 @@
 # Title:          create_topic_model.R
 # Description:    Build topic model with MALLET
 # Author:         Andrew Heiss
-# Last updated:   2013-12-26
+# Last updated:   2014-03-13
 # R version:      ≥3.0
 
 # Load libraries and set initial working directory
@@ -25,7 +25,7 @@ if(!file.exists("mallet/bin/mallet")) {
 #------------------------
 # Folder with input text files
 # TODO: Make this work with spaces. shQuote(file.path(importdir)) should work, but the quoted path breaks MALLET
-import.dir <- "mallet_input"
+import.dir <- "mallet_stemmed"
 
 # Set names for output files 
 output.file <- "topics.mallet"  # MALLET data file
@@ -39,14 +39,13 @@ num.iterations <- 1000  # Number of training/learning Gibbs sampling iterations
 num.top.words <- 11  # Number of most probable words to print (num.top.words - 1 words, actually)
 optimize.interval <- 20  # Number of iterations between reestimating dirichlet hyperparameters
 optimize.burnin <- 50  # Number of iterations to run before first estimating dirichlet hyperparameters
-stoplist <- "stopwords.txt"  # List of stopwords
 
 # Finally, paste the commands together
 cd <- paste("cd", shQuote(normalizePath(base.directory)))
 import.command <- paste("mallet/bin/mallet", "import-dir", "--input", import.dir, 
                         "--output", output.file, 
-                        "--keep-sequence", "--remove-stopwords",
-                        "--stoplist-file", stoplist, sep=" ")
+                        "--keep-sequence", 
+                        "--token-regex \"\\w+\"", sep=" ")  # token-regex will consider _ as part of the word
 train.command <- paste("mallet/bin/mallet", "train-topics", "--input", output.file,
                        "--num-iterations", num.iterations,
                        "--num-topics", num.topics,
@@ -68,7 +67,11 @@ system(mallet.command)
 #--------------------
 # Read the files created by MALLET
 topic.keys.result <- read.table(output.topickeys, header=F, sep="\t")
-doc.topics.result <-read.table(output.doctopics, header=F, sep="\t")
+doc.topics.result <- read.table(output.doctopics, header=F, sep="\t")
+
+if(nrow(doc.topics.result) != 515) {
+  stop("MALLET accidentally parsed an extra file (like .DS_Store). Delete it manually and rerun this file.")
+}
 
 # doc.topics.result comes in the following format:
 #
@@ -119,21 +122,32 @@ topic.docs.norm <- normalize.topics(doc.topics)  # Normalized
 # Add short names for topics
 #-----------------------------
 colnames(topic.keys.result) <- c("key", "dirichlet", "topic.words")
-short.names <- c("National government", "Draft constitution", "Environmental issues",
-                 "Development", "Police arrests", "Protests and clashes", 
-                 "Sexual violence", "Police torture", "Elections", "Human rights and civil society", 
-                 "Post-revolutionary Egypt", "Business and government", "Egyptian workers", 
-                 "Trials", "Religious issues", "Legislation", "Morsi and press freedom",
-                 "SCAF", "Youth in the street", "Christian issues")
+# SPSA short names
+# short.names <- c("National government", "Draft constitution", "Environmental issues",
+#                  "Development", "Police arrests", "Protests and clashes", 
+#                  "Sexual violence", "Police torture", "Elections", "Human rights and civil society", 
+#                  "Post-revolutionary Egypt", "Business and government", "Egyptian workers", 
+#                  "Trials", "Religious issues", "Legislation", "Morsi and press freedom",
+#                  "SCAF", "Youth in the street", "Christian issues")
+
+# Shortnames for enhanced corpus (stemmed, n-grammed)
+short.names <- c("Police torture", "Sexual violence", "Media and censorship", 
+                 "Sectarian issues", "Egyptian workers", "Religious issues", 
+                 "Police violence", "Business", "Protests and clashes", 
+                 "Muslim Brotherhood and constitution", "Elections", "Military trials", 
+                 "Legislation and governance", "Environmental issues", 
+                 "Human rights and civil society", "Protestors and activism", 
+                 "Public economics", "Police arrests", "Muslim Brotherhood and politics", 
+                 "Post-revolutionary Egypt (catch-all)")
 topic.keys.result$short.names <- short.names
 
 
 #------------------
 # Save everything
 #------------------
-save(ngos, topic.keys.result, topic.docs, topic.docs.norm, file="topic_model.RData")
+save(topic.keys.result, topic.docs, topic.docs.norm, file="topic_model.RData")
 
 # Export CSV of topic proportions in documents
 topic.docs.export <- topic.docs.norm
-colnames(topic.docs.export) <- c(short.names, "Publication")
+colnames(topic.docs.export) <- short.names #c(short.names, "Publication")
 write.csv(x=topic.docs.export, file="../Output/topic-docs.csv", row.names=TRUE)
