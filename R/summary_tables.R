@@ -6,7 +6,7 @@
 
 # Libraries
 library(xtable)
-library(rtf)
+library(pander)
 
 # Set working directory
 base.directory <- "~/Dropbox/Media and NGOs in the ME/Media and NGOs/R"
@@ -106,8 +106,13 @@ done(output)
 #----------------------
 topic.summary <- topic.keys.result[c("dirichlet", "topic.words", "short.names")]
 topic.summary <- topic.summary[order(topic.summary$dirichlet, decreasing=TRUE), ]
-colnames(topic.summary) <- c("Dirichlet parameter", "Top ten words", "Short name")
-rownames(topic.summary) <- 1:nrow(topic.summary)
+colnames(topic.summary) <- c("Dirichlet α", "Top ten words", "Short name")
+rownames(topic.summary) <- paste(" ", 1:nrow(topic.summary))  # To trick pander into thinking these are real rownames...
+
+# Pandoc Markdown
+cat(pandoc.table.return(topic.summary, split.tables=Inf, 
+                        justify="left", caption="Topic model summary"), 
+    file="../Output/topic-model-summary.md")
 
 # HTML
 print(xtable(topic.summary, caption="Topic model summary"), 
@@ -119,10 +124,3 @@ print(xtable(topic.summary, caption="Topic model summary"),
       type="latex", file="../Output/topic-model-summary.tex", 
       include.rownames=TRUE, caption.placement="top", size="tiny")
 
-# Word
-# output <- RTF("../Output/topic-model-summary.docx", width=8.5, height=11)
-# addText(topic.summary, "Topic model summary", bold=TRUE)
-# # addText(output, "Corpus summary")
-# addNewLine(output)
-# addTable(output, ngo.output, font.size=9, row.names=TRUE, NA.string="")
-# done(output)
