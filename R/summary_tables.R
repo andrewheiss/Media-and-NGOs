@@ -67,12 +67,12 @@ cat(pandoc.table.return(table.output, split.tables=Inf,
 # Add enough NAs to coerce list into a matrix
 num.columns <- 3
 cells.to.add <- num.columns - (length(ngos) %% num.columns)
-ngo.output <- matrix(c(sort(ngos), rep(NA, cells.to.add)), ncol=num.columns)
+ngo.output <- matrix(c(sort(ngos), rep(NA, cells.to.add)), ncol=num.columns, byrow=TRUE)
 
 # Markdown
 cat(pandoc.table.return(ngo.output, split.tables=Inf, 
                         justify="left", caption="List of NGOs"),
-    file="../Output/table_2.md")
+    file="../Output/table_ngo_list.md")
 
 
 #----------------------
