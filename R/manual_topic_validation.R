@@ -28,14 +28,39 @@ validation.long$label <- factor(validation.long$topic, labels=topic.keys.result$
 topic.order <- topic.keys.result[order(topic.keys.result$dirichlet, decreasing=FALSE), "short.names"]
 validation.long$label <- factor(validation.long$label, levels=topic.order, ordered=TRUE)
 
+# Add publication information
+validation.long$publication <- factor(regmatches(validation.long$article, regexpr("^[^_]+", validation.long$article)))
+
+# Determine colors
+set.color <- function(x) {
+  
+  if(x == "ahram") {
+    color <- "#e41a1c"
+  } else if (x == "dne") {
+    color <- "#377eb8"
+  } else if (x == "egypt") {
+    color <- "#e6ab02"
+  }
+  
+  return(color)
+}
+
+# Add colors to plot data
+validation.long$color <- sapply(validation.long$publication, FUN=set.color)
+
+# Create named vector of colors for scale_fill_manual()
+publication.colors <- unique(validation.long$color)
+names(publication.colors) <- unique(validation.long$publication)
+
 # Plot the topic proportions for sampled articles 
-p <- ggplot(validation.long, aes(x=label, y=proportion))
+p <- ggplot(validation.long, aes(x=label, y=proportion, fill=publication))
 p <- p + geom_bar(stat="identity") + coord_flip() + facet_wrap(~ article) + 
   scale_y_continuous(labels=percent) + 
+  scale_fill_manual(values=publication.colors, guide=FALSE) + 
   labs(x=NULL, y=NULL) + theme_bw(8)
 p
 
-ggsave(plot=p, filename="../Output/validation.pdf", width=5.5, height=4, units="in")
+ggsave(plot=p, filename="../Output/plot_validation.pdf", width=5.5, height=4, units="in")
 
 # Extract articles from the corpus
 get.article <- function(publication.id) {
