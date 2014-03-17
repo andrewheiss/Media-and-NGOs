@@ -8,6 +8,7 @@
 library(reshape2)
 library(scales)
 library(plyr)
+library(pander)
 
 mallet.seed <- 1234
 
@@ -117,6 +118,34 @@ normalize.topics <- function(x) {
 # Make clean data frames of topic proportions
 topic.docs <- data.frame(doc.topics)  # Regular
 topic.docs.norm <- normalize.topics(doc.topics)  # Normalized
+
+
+# Example normalized table
+example.normal <- data.frame(topic1=c(0.5, 0.1, 0.5), topic2=c(0.0, 0.3, 0.3), topic3=c(0.5, 0.6, 0.2))
+rownames(example.normal) <- c("Article 1", "Article 2", "Article 3")
+example.normalized <- normalize.topics(example.normal)
+
+# Add total rows and columns
+example.normal$total <- rowSums(example.normal)
+example.normal <- rbind(example.normal, colSums(example.normal))
+rownames(example.normal)[4] <- "Column totals"
+colnames(example.normal)[4] <- "Row totals"
+example.normal[4,4] <- NA  # Remove column/row sum
+
+example.normalized$total <- rowSums(example.normalized)
+example.normalized <- rbind(example.normalized, colSums(example.normalized))
+rownames(example.normalized)[4] <- "Column totals"
+colnames(example.normalized)[4] <- "Row totals"
+example.normalized[4,4] <- NA  # Remove column/row sum
+
+# Combine tables into mega table
+example.combined <- cbind(example.normal, "", example.normalized)
+colnames(example.combined)[5] <- "→"
+
+# Export to Markdown
+cat(pandoc.table.return(example.combined, split.tables=Inf, 
+                        justify="center", digits=2),
+    file="../Output/table_norm_example.md")
 
 
 #-----------------------------
