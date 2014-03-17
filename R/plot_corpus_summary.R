@@ -81,7 +81,7 @@ plot.data$publication <- paste(plot.data$publication, "   ")  # Add spaces after
 p <- ggplot(aes(x=month, y=prop, colour=publication), data=plot.data)
 p <- p + geom_line(size=1) + 
   scale_y_continuous(labels=percent) + labs(x=NULL, y=NULL) + 
-  scale_colour_brewer(palette="Set1", name="") + 
+  scale_colour_manual(values=c("#e41a1c", "#377eb8", "#e6ab02"), name="") + 
   theme_bw(10) + theme(legend.position="bottom", legend.key.size = unit(.7, "line"), legend.key = element_blank())
 
-ggsave(plot=p, filename="../Output/figure_2.pdf", width=5.5, height=4, units="in")
+ggsave(plot=p, filename="../Output/plot_corpus_summary.pdf", width=5.5, height=4, units="in")
