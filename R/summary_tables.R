@@ -84,6 +84,7 @@ colnames(topic.summary) <- c("Dirichlet α", "Top ten words", "Short name")
 rownames(topic.summary) <- paste(" ", 1:nrow(topic.summary))  # To trick pander into thinking these are real rownames...
 
 # Pandoc Markdown
-cat(pandoc.table.return(topic.summary, split.tables=Inf, 
+cat(pandoc.table.return(topic.summary, split.tables=Inf, digits=3,
                         justify="left", caption="Topic model summary"), 
-    file="../Output/table_3.md")
+    file="../Output/table_topic_model.md")
+    # file="../Output/table_topic_model_control.md")
