@@ -18,6 +18,7 @@ library(reshape2)
 
 # Load topic model
 load("topic_model.RData")
+# load("topic_model_control.RData")
 
 # Add publication name
 topic.docs.norm$publication <- factor(regmatches(row.names(topic.docs.norm), regexpr("^[^_]+", row.names(topic.docs.norm))), 
@@ -28,9 +29,9 @@ topic.means.wide <- ddply(topic.docs.norm, ~ publication, colwise(mean))  # TODO
 topic.means.long <- melt(topic.means.wide, id="publication", variable.name="topic", value.name="proportion")
 topic.means.long$label <- factor(topic.means.long$topic, labels=topic.keys.result$short.names)
 
-topic.sds.wide <- ddply(topic.docs.norm, ~ publication, colwise(sd))
-topic.sds.long <- melt(topic.sds.wide, id="publication", variable.name="topic", value.name="stdev")
-topic.means.long$stdev <- topic.sds.long$stdev
+# topic.sds.wide <- ddply(topic.docs.norm, ~ publication, colwise(sd))
+# topic.sds.long <- melt(topic.sds.wide, id="publication", variable.name="topic", value.name="stdev")
+# topic.means.long$stdev <- topic.sds.long$stdev
 
 # Get reverse topic order for correct plotting
 topic.order <- topic.keys.result[order(topic.keys.result$dirichlet, decreasing=FALSE), "short.names"]
@@ -39,61 +40,42 @@ topic.means.long$label <- factor(topic.means.long$label, levels=topic.order, ord
 #-------------
 # Plot stuff
 #-------------
-# TODO: Add confidence intervals?
-# Calculate the distance between the highest and second-highest 
-# proportions between publications. So if topic 1 is .4 in ahram, 
-# .5 in egind, and .8 in dne, this function would return .3
-difference.from.second <- function(x) {
-  publication <- x$publication[which.max(x$proportion)]
-  n <- length(x$proportion)
-  second.max <- sort(x$proportion, partial=n-1)[n-1]
-  diff.from.2nd <- max(x$proportion) - second.max
-  df <- data.frame(publication, diff.from.2nd)
-}
+# Sort by Al-Ahram's proportions
+resorted <- topic.means.long[with(topic.means.long, order(publication, proportion)), ]
+resorted <- resorted[resorted$publication == "Al-Ahram English",]
 
+# Merge dirichlet values into the plot data
+dirichlet <- topic.keys.result
+dirichlet$short.names <- factor(dirichlet$short.names, levels=resorted$label, ordered=TRUE)
+dirichlet <- dirichlet[with(dirichlet, order(short.names)),]
 
-# Bar plot of absolute proportions
-absolute.plot <- ggplot(topic.means.long, aes(x=label, y=proportion, fill=publication))
-absolute.plot <- absolute.plot + geom_bar(stat="identity") + facet_wrap(~ publication) + 
+plot.data <- topic.means.long
+plot.data$label <- factor(plot.data$label, levels=resorted$label, ordered=TRUE)
+plot.data <- plot.data[with(plot.data, order(label)),]
+plot.data$dirichlet <- rep(dirichlet$dirichlet, each=3)
+
+plot.data$label <- factor(plot.data$label, levels=rev(resorted$label), ordered=TRUE)
+
+plot.data <- plot.data[plot.data$topic != "X19",]  # Remove catch-all topic
+# plot.data <- plot.data[plot.data$topic != "X5",]  # Remove catch-all topic for CONTROL GROUP
+
+# Fix stacked points
+# plot.data[plot.data$topic=="X18" & plot.data$publication=="Egypt Independent",]$proportion <- 
+#   plot.data[plot.data$topic=="X18" & plot.data$publication=="Egypt Independent",]$proportion + 0.00009
+
+p <- ggplot(plot.data, aes(x=label, y=proportion, group=publication, colour=publication))
+model.summary <- p + geom_point(aes(size=dirichlet), alpha=0.9, position=position_jitter(width=0, height=.00002)) + 
   scale_y_continuous(labels=percent) + coord_flip() + 
-  labs(x=NULL, y=NULL) + 
-  theme_bw(8) + scale_fill_brewer(palette="Set1", guide=FALSE)
+  #labs(x=NULL, y="Normalized mean of topic appearance") + theme_bw(8) + 
+  labs(x=NULL, y=NULL) + theme_bw(8) + 
+  theme(panel.grid.major.y=element_line(size=.6), legend.title.align=0,
+        axis.ticks.y=element_blank(), legend.key = element_blank(), 
+        legend.position="bottom", legend.direction = "horizontal", legend.box="horizontal", 
+        legend.key.size = unit(.7, "line"), #legend.margin=unit(-.5, "line"), 
+        legend.text=element_text(size=4), legend.title=element_text(size=4)) +
+  scale_colour_manual(values=c("#e41a1c", "#377eb8", "#e6ab02"), name="") + 
+  scale_size_continuous(range = c(1, 5), name=expression(paste("Proportion in corpus (", alpha, ")")))
+model.summary
 
-ggsave(plot=absolute.plot, filename="../Output/absolute-plot.pdf", width=5.5, height=4, units="in")
-
-# Bar plot of distance from #1 and #2
-diff.means <- ddply(topic.means.long, ~ label, difference.from.second)
-diff.means$publication <- factor(paste(diff.means$publication, "   "), ordered=TRUE)  # Add spaces after legend titles to help with spacing
-
-diff.plot <- ggplot(diff.means, aes(x=label, y=diff.from.2nd, fill=publication))
-diff.plot <- diff.plot + geom_bar(stat="identity") + 
-  scale_y_continuous(labels=percent) + coord_flip() + 
-  scale_fill_brewer(palette="Set1", name="") + 
-  labs(x=NULL, y=NULL) + 
-  theme_bw(8) + theme(legend.position="bottom", legend.key.size = unit(.7, "line"))
-
-ggsave(plot=diff.plot, filename="../Output/diff-plot.pdf", width=5.5, height=4, units="in")
-
-
-#--------------
-# Other plots
-#--------------
-# # Bar plot and jittered points of absolute proportions
-# plot.data <- melt(data=topic.docs.norm, id.vars="publication")  # Use full data instead of generated means
-# plot.data$label <- factor(plot.data$variable, labels=topic.keys.result$short.names)
-# # Fix order
-# plot.data$label <- factor(plot.data$label, levels=topic.order, ordered=TRUE)
-# 
-# p <- ggplot(data=plot.data, aes(x=label, y=value))
-# 
-# # Just jittering
-# p + geom_point(position="jitter", alpha=0.4) + coord_flip() + facet_wrap(~ publication) + theme_bw()
-# 
-# # Jittering + bar plot
-# p + stat_summary(aes(group=1), fun.y=mean, geom="bar") + 
-#   geom_point(position="jitter", alpha=0.4) + coord_flip() + facet_wrap(~ publication) + theme_bw()
-
-# Violin plots (really hard to read)
-# p + geom_violin(size=0.25) +
-#   stat_summary(aes(group=1), fun.y=mean, geom="point") + 
-#   coord_flip() + facet_wrap(~ publication) + labs(x=NULL, y=NULL)
+ggsave(plot=model.summary, filename="../Output/plot_topic_model_summary.pdf", width=5.5, height=4, units="in")
+# ggsave(plot=model.summary, filename="../Output/plot_topic_model_summary_control.pdf", width=5.5, height=4, units="in")
