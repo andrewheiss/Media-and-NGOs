@@ -34,6 +34,15 @@ output.state <-  "topic-state.gz"  # List of every word in every article and whi
 output.topickeys <- "topic-keys.txt"  # List of the topics
 output.doctopics <- "topic-doctopics.txt"  # Proportion of each topic in each input file
 
+# "Control" group of articles
+# import.dir <- "mallet_control_stemmed"
+
+# Set names for output files 
+# output.file <- "topics.mallet_control"  # MALLET data file
+# output.state <-  "topic-state_control.gz"  # List of every word in every article and which topics they're assigned to
+# output.topickeys <- "topic-keys_control.txt"  # List of the topics
+# output.doctopics <- "topic-doctopics_control.txt"  # Proportion of each topic in each input file
+
 # Topic and optimization options
 num.topics <- 20  # Number of topics to model
 num.iterations <- 1000  # Number of training/learning Gibbs sampling iterations
@@ -161,15 +170,15 @@ colnames(topic.keys.result) <- c("key", "dirichlet", "topic.words")
 #                  "SCAF", "Youth in the street", "Christian issues")
 
 # Shortnames for enhanced corpus (stemmed, n-grammed)
-# short.names <- c("Police torture", "Sexual violence", "Media and censorship", 
-#                  "Sectarian issues", "Egyptian workers", "Religious issues", 
-#                  "Police violence", "Business", "Protests and clashes", 
-#                  "Muslim Brotherhood and constitution", "Elections", "Military trials", 
-#                  "Legislation and governance", "Environmental issues", 
-#                  "Human rights and civil society", "Protestors and activism", 
-#                  "Public economics", "Police arrests", "Muslim Brotherhood and politics", 
-#                  "Post-revolutionary Egypt (catch-all)")
-# topic.keys.result$short.names <- short.names
+short.names <- c("Police torture", "Sexual violence", "Media and censorship", 
+                 "Sectarian issues", "Egyptian workers", "Religious issues", 
+                 "Police violence", "Business", "Protests and clashes", 
+                 "Muslim Brotherhood and constitution", "Elections", "Military trials", 
+                 "Legislation and governance", "Environmental issues", 
+                 "Human rights and civil society", "Protestors and activism", 
+                 "Public economics", "Police arrests", "Muslim Brotherhood and politics", 
+                 "Post-revolutionary Egypt (catch-all)")
+topic.keys.result$short.names <- short.names
 
 # Control group short names
 # short.names <- c("Muslim Brotherhood and politics", "Morsi and the media", 
@@ -185,6 +194,7 @@ colnames(topic.keys.result) <- c("key", "dirichlet", "topic.words")
 # Save everything
 #------------------
 save(topic.keys.result, topic.docs, topic.docs.norm, file="topic_model.RData")
+# save(topic.keys.result, topic.docs, topic.docs.norm, file="topic_model_control.RData")
 
 # Export CSV of topic proportions in documents
 topic.docs.export <- topic.docs.norm
