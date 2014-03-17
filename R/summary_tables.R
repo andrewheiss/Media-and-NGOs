@@ -5,7 +5,6 @@
 # R version:      ≥3.0
 
 # Libraries
-library(xtable)
 library(pander)
 
 # Set working directory
