@@ -80,9 +80,9 @@ topic.keys.result <- read.table(output.topickeys, header=F, sep="\t")
 doc.topics.result <- read.table(output.doctopics, header=F, sep="\t")
 
 # MAYBE: Make this *actually* look for (and remove?) the .DS_Store file?
-if(nrow(doc.topics.result) != 515) {
-  stop("MALLET accidentally parsed an extra file (like .DS_Store). Delete it manually and rerun this file.")
-}
+# if(nrow(doc.topics.result) != 515) {
+#   stop("MALLET accidentally parsed an extra file (like .DS_Store). Delete it manually and rerun this file.")
+# }
 
 # doc.topics.result comes in the following format:
 #
