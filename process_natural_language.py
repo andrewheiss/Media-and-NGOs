@@ -8,6 +8,7 @@ import glob
 import codecs
 import os
 from itertools import chain
+import csv
 
 
 #------------
@@ -126,6 +127,7 @@ bigram_finder = BigramCollocationFinder.from_words(token_list)
 bigram_finder.apply_freq_filter(bigram_min)
 
 # Get top bigrams
+# Other ways of scoring bigrams: https://github.com/AJRenold/classification_assignment_i256
 # Tecnically .nbest() is easier, but it doesn't return the actual association score
 # ngram_limit = int(len(token_list) * 0.1)
 # bigrams_pmi = bigram_finder.nbest(bigram_measures.pmi, ngram_limit)
@@ -139,9 +141,17 @@ bigrams_likerat = bigram_finder.score_ngrams(bigram_measures.likelihood_ratio)
 critical_value = 10.82757
 bigrams_significant = [bigram for bigram in bigrams_likerat if bigram[1] > critical_value]
 
-# TODO: Save bigrams and ratios to a CSV
-# Make a table like p. 163 in Manning and Schutze for top x bigrams?
-# Plot likelihood ratio for bigrams, just for fun?
+bigrams_out = [[bigram[1], bigram[0][0], bigram[0][1]] for bigram in bigrams_significant]
+
+with open('Output/bigrams.csv', 'wb') as csv_file:
+  csv_out = csv.writer(csv_file, delimiter=',', quoting=csv.QUOTE_ALL)
+  csv_out.writerow(['-2LL', 'W1', 'W2'])
+  for row in bigrams_out:
+    csv_out.writerow(row)
+
+
+# MAYBE: Make a table like p. 163 in Manning and Schutze for top x bigrams?
+# MAYBE: Plot likelihood ratio for bigrams, just for fun?
 
 # Trigrams
 # Necessary? Tricky because stuff like "human right" is a significant bigram,
