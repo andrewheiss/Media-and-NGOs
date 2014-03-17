@@ -19,6 +19,7 @@
 # Load libraries
 library(ggplot2)
 library(plyr)
+library(grid)
 library(reshape2)
 library(ggdendro)
 library(arcdiagram)
@@ -32,14 +33,15 @@ load("topic_model.RData")
 #-----------------------------------------
 # Create data frames
 df <- topic.docs.norm
+df$X19 <- NULL  # Remove catch-all topic
 df.publication <- df
 df.publication$publication <- factor(regmatches(row.names(df), regexpr("^[^_]+", row.names(df))), 
                                      labels=c("Al-Ahram English", "Daily News Egypt", "Egypt Independent"))
 
 # Create correlation matrix
 cors <- cor(df)
-rownames(cors) <- topic.keys.result$short.names
-colnames(cors) <- topic.keys.result$short.names
+rownames(cors) <- topic.keys.result$short.names[-20]
+colnames(cors) <- topic.keys.result$short.names[-20]
 
 # Create cluster object from matrix
 cor.cluster <- hclust(dist(cors), "ward")
@@ -113,12 +115,25 @@ plot.data$topic <- factor(plot.data$topic, levels=topic.order, ordered=TRUE)
 plot.data$scaled0to1 <- scale.data(plot.data$mean.prop) / 2  # Scale data
 plot.data$sqrt.sum <- topic.sqrt.long$sqrt.sum / 2.4
 
+# Add spaces after legend titles to help with spacing
+plot.data$publication <- paste(plot.data$publication, "   ")
+
+cluster.min <- c(0.5, 10.5)
+cluster.max <- c(5.5, 14.5)
+
 # Plot the dendrogram and bar plots
-p <- ggplot() + geom_segment(data=segment(dendro), aes(x=x, y=y, xend=xend, yend=yend)) +
-  theme_dendro() + coord_flip() +
-  theme(axis.text.y=element_text(hjust=1, size=13)) +
+p <- ggplot() + geom_rect(aes(xmin=cluster.min, xmax=cluster.max, ymin=-Inf, ymax=Inf), fill="lightgrey", alpha=0.7) + 
+  geom_segment(data=segment(dendro), aes(x=x, y=y, xend=xend, yend=yend)) +
+  theme_bw() + coord_flip() + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.title.x = element_blank(), 
+        axis.title.y = element_blank(), axis.text.x = element_blank(), 
+        axis.line = element_blank(), axis.ticks = element_blank(),
+        panel.border = element_blank(), legend.position="bottom", legend.key.size = unit(.7, "line")) + 
+  #theme(axis.text.y=element_text(hjust=1, size=13)) +
   scale_x_discrete(labels=dendro$labels$label) +
-  scale_fill_brewer(palette="Set1", name="") + 
-#   geom_bar(data=plot.data, aes(topic, sqrt.sum, fill=publication), stat="identity", width=.5)
+  scale_fill_manual(values=c("#e41a1c", "#377eb8", "#e6ab02"), name="") + 
+  #geom_bar(data=plot.data, aes(topic, sqrt.sum, fill=publication), stat="identity", width=.5)
   geom_bar(data=plot.data, aes(topic, scaled0to1, fill=publication), stat="identity", width=.5)
-ggsave(plot=p, filename="../Output/dendro.pdf", width=7, height=5, units="in")
+p
+ggsave(plot=p, filename="../Output/plot_dendro.pdf", width=7, height=5, units="in")
