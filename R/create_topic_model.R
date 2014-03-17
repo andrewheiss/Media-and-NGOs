@@ -200,3 +200,4 @@ save(topic.keys.result, topic.docs, topic.docs.norm, file="topic_model.RData")
 topic.docs.export <- topic.docs.norm
 colnames(topic.docs.export) <- short.names
 write.csv(x=topic.docs.export, file="../Output/topic-docs.csv", row.names=TRUE)
+# write.csv(x=topic.docs.export, file="../Output/topic-docs_control.csv", row.names=TRUE)
