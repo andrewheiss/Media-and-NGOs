@@ -38,7 +38,7 @@ output.doctopics <- "topic-doctopics.txt"  # Proportion of each topic in each in
 # import.dir <- "mallet_control_stemmed"
 
 # Set names for output files 
-# output.file <- "topics.mallet_control"  # MALLET data file
+# output.file <- "topics_control.mallet"  # MALLET data file
 # output.state <-  "topic-state_control.gz"  # List of every word in every article and which topics they're assigned to
 # output.topickeys <- "topic-keys_control.txt"  # List of the topics
 # output.doctopics <- "topic-doctopics_control.txt"  # Proportion of each topic in each input file

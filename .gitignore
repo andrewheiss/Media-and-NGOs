@@ -25,6 +25,10 @@ topic-doctopics.txt
 topic-keys.txt
 topic-state.gz
 topics.mallet
+topic-doctopics_control.txt
+topic-keys_control.txt
+topic-state_control.gz
+topics_control.mallet
 validation_articles.txt
 
 # Publication stuff
