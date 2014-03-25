@@ -57,7 +57,7 @@ p <- ggplot(validation.long, aes(x=label, y=proportion, fill=publication))
 p <- p + geom_bar(stat="identity") + coord_flip() + facet_wrap(~ article) + 
   scale_y_continuous(labels=percent) + 
   scale_fill_manual(values=publication.colors, guide=FALSE) + 
-  labs(x=NULL, y=NULL) + theme_bw(8)
+  labs(y="\nProportion of topic in article", x=NULL) + theme_bw(8)
 p
 
 ggsave(plot=p, filename="../Output/plot_validation.pdf", width=5.5, height=4, units="in")

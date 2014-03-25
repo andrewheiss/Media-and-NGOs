@@ -80,7 +80,7 @@ plot.data$publication <- paste(plot.data$publication, "   ")  # Add spaces after
 
 p <- ggplot(aes(x=month, y=prop, colour=publication), data=plot.data)
 p <- p + geom_line(size=1) + 
-  scale_y_continuous(labels=percent) + labs(x=NULL, y=NULL) + 
+  scale_y_continuous(labels=percent) + labs(x=NULL, y="Proportion of articles that mention NGOs\n") + 
   scale_colour_manual(values=c("#e41a1c", "#377eb8", "#e6ab02"), name="") + 
   theme_bw(10) + theme(legend.position="bottom", legend.key.size = unit(.7, "line"), legend.key = element_blank())
 

@@ -67,14 +67,15 @@ p <- ggplot(plot.data, aes(x=label, y=proportion, group=publication, colour=publ
 model.summary <- p + geom_point(aes(size=dirichlet), alpha=0.9, position=position_jitter(width=0, height=.00002)) + 
   scale_y_continuous(labels=percent) + coord_flip() + 
   #labs(x=NULL, y="Normalized mean of topic appearance") + theme_bw(8) + 
-  labs(x=NULL, y=NULL) + theme_bw(8) + 
+  labs(x=NULL, y="\nMean normalized proportion of topic in corpus") + theme_bw(8) + 
   theme(panel.grid.major.y=element_line(size=.6), legend.title.align=0,
         axis.ticks.y=element_blank(), legend.key = element_blank(), 
         legend.position="bottom", legend.direction = "horizontal", legend.box="horizontal", 
         legend.key.size = unit(.7, "line"), #legend.margin=unit(-.5, "line"), 
-        legend.text=element_text(size=4), legend.title=element_text(size=4)) +
+        legend.text=element_text(size=4), legend.title=element_text(size=4),
+        plot.margin=unit(c(0,0,0,0), "line")) +
   scale_colour_manual(values=c("#e41a1c", "#377eb8", "#e6ab02"), name="") + 
-  scale_size_continuous(range = c(1, 5), name=expression(paste("Proportion in corpus (", alpha, ")")))
+  scale_size_continuous(range = c(1, 5), name=expression(paste("Proportion (", alpha, ")")))
 model.summary
 
 ggsave(plot=model.summary, filename="../Output/plot_topic_model_summary.pdf", width=5.5, height=4, units="in")
