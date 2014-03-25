@@ -11,6 +11,8 @@ build_control_model: Output/topic_model_control.RData Output/topics_control.mall
 
 plots: Output/plot_corpus_summary.pdf Output/plot_dendro.pdf Output/plot_topic_model_summary.pdf Output/plot_topic_model_summary_control.pdf
 
+tables: Output/table_corpus_summary.md Output/table_ngo_list.md Output/table_topic_model.md Output/table_topic_model_control.md
+
 validation: Output/plot_validation.pdf Output/validation-articles.txt Output/validation-topic-words.csv 
 
 create_output: 
@@ -88,3 +90,15 @@ Output/plot_dendro.pdf: Output/topic_model.RData R/plot_topic_network.R
 Output/plot_validation.pdf Output/validation-articles.txt Output/validation-topic-words.csv: Output/topic_model.RData Output/media_data.RData R/manual_topic_validation.R
 	@echo "Validating topic model..."
 	cd R; Rscript manual_topic_validation.R
+
+
+#-----------------
+# Summary tables
+#-----------------
+Output/table_corpus_summary.md Output/table_ngo_list.md Output/table_topic_model.md: Output/topic_model.RData Output/media_data.RData R/summary_tables.R
+	@echo "Creating summary tables of corpus, NGOs, and model..."
+	cd R; Rscript summary_tables.R
+
+Output/table_topic_model_control.md: Output/topic_model.RData R/summary_tables.R
+	@echo "Creating summary table of control model..."
+	cd R; Rscript summary_tables.R control
