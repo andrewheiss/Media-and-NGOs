@@ -1,23 +1,28 @@
 
 
-#--------------
-# Compilation
-#--------------
+#----------------
+# Phony targets
+#----------------
+create_output: 
+	@-mkdir Output 2>/dev/null || true
+
+# Export articles from SQLite databases and stem and n-gram them
+export_articles: articles process_articles
 articles: create_output Output/articles/*.txt Output/articles_control/*.txt
 process_articles: Output/articles_stemmed/*.txt Output/articles_stemmed/*.txt Output/bigrams.csv Output/bigrams_control.csv
 
+# Build topic models using the exported articles
+model: build_model build_control_model
 build_model: Output/topic_model.RData Output/topics.mallet Output/topic-state.gz Output/topic-keys.txt Output/topic-doctopics.txt Output/topic-docs.csv
 build_control_model: Output/topic_model_control.RData Output/topics_control.mallet Output/topic_control-state.gz Output/topic_control-keys.txt Output/topic_control-doctopics.txt Output/topic-docs_control.csv
 
+# Generate figures and tables for the topic models
+output: plots tables validation
 plots: Output/plot_corpus_summary.pdf Output/plot_dendro.pdf Output/plot_topic_model_summary.pdf Output/plot_topic_model_summary_control.pdf
-
 tables: Output/table_corpus_summary.md Output/table_ngo_list.md Output/table_topic_model.md Output/table_topic_model_control.md
-
 validation: Output/plot_validation.pdf Output/validation-articles.txt Output/validation-topic-words.csv 
 
-create_output: 
-	@#echo "Creating output folder structure..."
-	@-mkdir Output 2>/dev/null || true
+all: export_articles model output
 
 
 #------------------------------
