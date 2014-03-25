@@ -1,7 +1,7 @@
 # Title:          plot_topic_network.R
-# Description:    Plot an arcplot and dendrogram of the topic model
+# Description:    Plot a dendrogram of the topic model
 # Author:         Andrew Heiss
-# Last updated:   2013-12-28
+# Last updated:   2014-03-25
 # R version:      ≥3.0
 
 # Huge thanks to Rolf Fredheim for creating the arcplot + dendrogram + topic proportions idea!
@@ -17,15 +17,14 @@
 
 
 # Load libraries
-library(ggplot2)
-library(plyr)
-library(grid)
-library(reshape2)
-library(ggdendro)
-library(arcdiagram)
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(plyr))
+suppressPackageStartupMessages(library(grid))
+suppressPackageStartupMessages(library(reshape2))
+suppressPackageStartupMessages(library(ggdendro))
 
 # Load topic model
-load("topic_model.RData")
+load("../Output/topic_model.RData")
 
 
 #-----------------------------------------
@@ -46,35 +45,6 @@ colnames(cors) <- topic.keys.result$short.names[-20]
 # Create cluster object from matrix
 cor.cluster <- hclust(dist(cors), "ward")
 cor.dendro <- as.dendrogram(cor.cluster)  # Convert cluster to dendrogram
-
-
-#-----------------
-# Create arcplot
-#-----------------
-# Get pieces for arcplot
-values <- colSums(cors)  # Sum of correlations for edge values
-edges <- melt(cors)  # Convert to long
-edges <- edges[edges[, 3] >= 0.1, ]  # Get rid of negative and small correlations
-colnames(edges) <- c("Source","Target","Weight")
-edgelist <- as.matrix(edges[, 1:2])  # Create edgelist
-
-# Replicate the dendrogram order
-arcs.order <- order.dendrogram(cor.dendro)
-
-# Plot the arcplot
-pdf(file="../Output/arcs.pdf", width=3, height=5)
-arcplot(edgelist, lwd.arcs=20 * edges[,3], 
-        show.nodes=TRUE, sorted=TRUE, ordering=arcs.order, 
-        show.labels=FALSE, col.arcs="#ff7f00", horizontal=FALSE)
-dev.off()
-
-# Bonus!
-# This will rotate the graph by 180°, but it doesn't work in RStudio, and it can't flip the graph.
-# So we need to use Photoshop to get the arcs and dendrogram to align
-# library(grid)
-# cap <- grid.cap()
-# grid.newpage()
-# grid.raster(cap, vp=viewport(angle=180))
 
 
 #----------------------------------------
@@ -135,5 +105,35 @@ p <- ggplot() + geom_rect(aes(xmin=cluster.min, xmax=cluster.max, ymin=-Inf, yma
   scale_fill_manual(values=c("#e41a1c", "#377eb8", "#e6ab02"), name="") + 
   #geom_bar(data=plot.data, aes(topic, sqrt.sum, fill=publication), stat="identity", width=.5)
   geom_bar(data=plot.data, aes(topic, scaled0to1, fill=publication), stat="identity", width=.5)
-p
+
 ggsave(plot=p, filename="../Output/plot_dendro.pdf", width=7, height=5, units="in")
+system("rm Rplots.pdf")  # Something---maybe ggdendro---is making this file!
+
+#-----------------
+# Create arcplot
+#-----------------
+# Get pieces for arcplot
+# suppressPackageStartupMessages(library(arcdiagram))
+# values <- colSums(cors)  # Sum of correlations for edge values
+# edges <- melt(cors)  # Convert to long
+# edges <- edges[edges[, 3] >= 0.1, ]  # Get rid of negative and small correlations
+# colnames(edges) <- c("Source","Target","Weight")
+# edgelist <- as.matrix(edges[, 1:2])  # Create edgelist
+
+# # Replicate the dendrogram order
+# arcs.order <- order.dendrogram(cor.dendro)
+
+# # Plot the arcplot
+# pdf(file="../Output/arcs.pdf", width=3, height=5)
+# arcplot(edgelist, lwd.arcs=20 * edges[,3], 
+#         show.nodes=TRUE, sorted=TRUE, ordering=arcs.order, 
+#         show.labels=FALSE, col.arcs="#ff7f00", horizontal=FALSE)
+# dev.off()
+
+# Bonus!
+# This will rotate the graph by 180°, but it doesn't work in RStudio, and it can't flip the graph.
+# So we need to use Photoshop to get the arcs and dendrogram to align
+# library(grid)
+# cap <- grid.cap()
+# grid.newpage()
+# grid.raster(cap, vp=viewport(angle=180))
