@@ -13,8 +13,7 @@ import argparse
 
 
 # Get command line information
-parser = argparse.ArgumentParser(description='Stem and create bigrams for a folder of plain text files.',
-                                formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description='Stem and create bigrams for a folder of plain text files.')
 parser.add_argument('documents', type=str, 
                     help='the path to the folder of exported documents')
 parser.add_argument('output_folder', type=str, 
