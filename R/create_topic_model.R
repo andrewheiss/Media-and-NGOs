@@ -19,8 +19,8 @@ control = args$control
 mallet.seed <- 1234
 
 # Make sure MALLET is there
-if(!file.exists("mallet/bin/mallet")) {
-  stop("MALLET not found. You need to place MALLET in a subfolder named 'mallet' in the same directory as this file.")
+if(!file.exists("../mallet/bin/mallet")) {
+  stop("MALLET not found. You need to place MALLET in a folder named 'mallet' in the root of this project.")
 }
 
 
@@ -91,11 +91,11 @@ optimize.burnin <- 50  # Number of iterations to run before first estimating dir
 # Finally, paste the commands together
 # cd <- paste("cd", shQuote(normalizePath(base.directory)))
 cd <- paste("cd", shQuote(normalizePath("../Output")))
-import.command <- paste("../R/mallet/bin/mallet", "import-dir", "--input", import.dir, 
+import.command <- paste("../mallet/bin/mallet", "import-dir", "--input", import.dir, 
                         "--output", output.file, 
                         "--keep-sequence", 
                         "--token-regex \"\\w+\"", sep=" ")  # token-regex will consider _ as part of the word
-train.command <- paste("../R/mallet/bin/mallet", "train-topics", "--input", output.file,
+train.command <- paste("../mallet/bin/mallet", "train-topics", "--input", output.file,
                        "--num-iterations", num.iterations,
                        "--num-topics", num.topics,
                        "--num-top-words", num.top.words, 

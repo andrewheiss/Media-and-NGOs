@@ -16,19 +16,6 @@ Corpora/*.db
 
 # MALLET stuff
 mallet/*
-R/mallet/*
-R/mallet_input/*
-R/mallet_stemmed/*
-R/mallet_control/*
-R/mallet_control_stemmed/*
-topic-doctopics.txt
-topic-keys.txt
-topic-state.gz
-topics.mallet
-topic-doctopics_control.txt
-topic-keys_control.txt
-topic-state_control.gz
-topics_control.mallet
 validation_articles.txt
 
 # Publication stuff
