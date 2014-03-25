@@ -5,16 +5,16 @@
 # R version:      ≥3.0
 
 # Load libraries and set variables
-library(plyr)
-library(ggplot2)
-library(scales)
-library(reshape2)
+suppressPackageStartupMessages(library(plyr))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(scales))
+suppressPackageStartupMessages(library(reshape2))
 
 seed <- 1234
 num.articles <- 3
 
-load("topic_model.RData")
-load("media_data.RData")
+load("../Output/topic_model.RData")
+load("../Output/media_data.RData")
 
 
 # Sample from the un-normalized topic model
@@ -58,7 +58,6 @@ p <- p + geom_bar(stat="identity") + coord_flip() + facet_wrap(~ article) +
   scale_y_continuous(labels=percent) + 
   scale_fill_manual(values=publication.colors, guide=FALSE) + 
   labs(y="\nProportion of topic in article", x=NULL) + theme_bw(8)
-p
 
 ggsave(plot=p, filename="../Output/plot_validation.pdf", width=5.5, height=4, units="in")
 
@@ -105,12 +104,12 @@ sink(file=NULL)
 #-----------------------------------------------------------------------
 # Read the huge words database 
 # TODO: Make this more dynamic, since `topic-state.gz` and `mallet_stemmed` are actually user configurable in `load_data.R`
-everything <- read.table("topic-state.gz")
+everything <- read.table("../Output/topic-state.gz")
 colnames(everything) <- c("doc", "source.file", "pos", "typeindex", "type", "topic")
 
 # Build list of filenames to select
 full.text$publication <- ifelse(full.text$publication == "egind", "egypt_independent", full.text$publication)
-articles.to.select <- paste("mallet_stemmed/", full.text$publication, "_", full.text$id_article, ".txt", sep="")
+articles.to.select <- paste("articles_stemmed/", full.text$publication, "_", full.text$id_article, ".txt", sep="")
 
 # Select them
 article.words <- subset(everything, everything$source.file %in% articles.to.select)
@@ -125,4 +124,4 @@ combined <- combined[order(combined$order), ]  # Reorder
 combined <- combined[c("source.file", "doc", "pos", "typeindex", "type", "short.names", "topic.words")]
 
 # Save to a file
-write.csv(x=combined, file="../Output/topic-words.csv", row.names=FALSE)
+write.csv(x=combined, file="../Output/validation-topic-words.csv", row.names=FALSE)

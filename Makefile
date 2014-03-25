@@ -11,6 +11,8 @@ build_control_model: Output/topic_model_control.RData Output/topics_control.mall
 
 plots: Output/plot_corpus_summary.pdf
 
+validation: Output/plot_validation.pdf Output/validation-articles.txt Output/validation-topic-words.csv 
+
 create_output: 
 	@#echo "Creating output folder structure..."
 	@-mkdir Output 2>/dev/null || true
@@ -70,3 +72,7 @@ Output/topic_model_control.RData Output/topics_control.mallet Output/topic_contr
 Output/plot_corpus_summary.pdf: Output/media_data.RData R/plot_corpus_summary.R
 	@echo "Plotting corpus summary..."
 	cd R; Rscript plot_corpus_summary.R
+
+Output/plot_validation.pdf Output/validation-articles.txt Output/validation-topic-words.csv: Output/topic_model.RData Output/media_data.RData R/manual_topic_validation.R
+	@echo "Validating topic model..."
+	cd R; Rscript manual_topic_validation.R
