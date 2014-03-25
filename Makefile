@@ -9,7 +9,7 @@ create_output:
 # Export articles from SQLite databases and stem and n-gram them
 export_articles: articles process_articles
 articles: create_output Output/articles/*.txt Output/articles_control/*.txt
-process_articles: Output/articles_stemmed/*.txt Output/articles_stemmed/*.txt Output/bigrams.csv Output/bigrams_control.csv
+process_articles: Output/articles_stemmed/*.txt Output/articles_control_stemmed/*.txt Output/bigrams.csv Output/bigrams_control.csv
 
 # Build topic models using the exported articles
 model: build_model build_control_model
@@ -22,6 +22,7 @@ plots: Output/plot_corpus_summary.pdf Output/plot_dendro.pdf Output/plot_topic_m
 tables: Output/table_corpus_summary.md Output/table_ngo_list.md Output/table_topic_model.md Output/table_topic_model_control.md
 validation: Output/plot_validation.pdf Output/validation-articles.txt Output/validation-topic-words.csv 
 
+# Do everything!
 all: export_articles model output
 
 
@@ -47,7 +48,7 @@ Output/articles_stemmed/*.txt Output/bigrams.csv: prepare_corpus/process_natural
 	@-mkdir Output/articles_stemmed 2>/dev/null || true
 	python2 prepare_corpus/process_natural_language.py Output/articles/ Output/articles_stemmed prepare_corpus/stopwords.txt Output/bigrams.csv
 
-Output/articles_control/stemmed/*.txt Output/bigrams_control.csv: prepare_corpus/process_natural_language.py Output/articles_control/*.txt
+Output/articles_control_stemmed/*.txt Output/bigrams_control.csv: prepare_corpus/process_natural_language.py Output/articles_control/*.txt
 	@echo "Processing control articles (this can take a while)..."
 	@-mkdir Output/articles_control_stemmed 2>/dev/null || true
 	python2 prepare_corpus/process_natural_language.py Output/articles_control/ Output/articles_control_stemmed prepare_corpus/stopwords.txt Output/bigrams_control.csv
