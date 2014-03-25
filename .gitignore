@@ -6,7 +6,7 @@
 
 # Corpus stuff
 *.db
-Corpora/*
+Corpora/*.db
 
 # R stuff
 *.Rapp.history
