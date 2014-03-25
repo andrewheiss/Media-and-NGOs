@@ -9,7 +9,7 @@ process_articles: Output/articles_stemmed/*.txt Output/articles_stemmed/*.txt Ou
 build_model: Output/topic_model.RData Output/topics.mallet Output/topic-state.gz Output/topic-keys.txt Output/topic-doctopics.txt Output/topic-docs.csv
 build_control_model: Output/topic_model_control.RData Output/topics_control.mallet Output/topic_control-state.gz Output/topic_control-keys.txt Output/topic_control-doctopics.txt Output/topic-docs_control.csv
 
-plots: Output/plot_corpus_summary.pdf Output/plot_dendro.pdf
+plots: Output/plot_corpus_summary.pdf Output/plot_dendro.pdf Output/plot_topic_model_summary.pdf Output/plot_topic_model_summary_control.pdf
 
 validation: Output/plot_validation.pdf Output/validation-articles.txt Output/validation-topic-words.csv 
 
@@ -72,6 +72,14 @@ Output/topic_model_control.RData Output/topics_control.mallet Output/topic_contr
 Output/plot_corpus_summary.pdf: Output/media_data.RData R/plot_corpus_summary.R
 	@echo "Plotting corpus summary..."
 	cd R; Rscript plot_corpus_summary.R
+
+Output/plot_topic_model_summary.pdf: Output/topic_model.RData R/plot_topic_model.R
+	@echo "Plotting topic model summary..."
+	cd R; Rscript plot_topic_model.R
+
+Output/plot_topic_model_summary_control.pdf: Output/topic_model_control.RData R/plot_topic_model.R
+	@echo "Plotting topic model summary for control group..."
+	cd R; Rscript plot_topic_model.R control
 
 Output/plot_dendro.pdf: Output/topic_model.RData R/plot_topic_network.R
 	@echo "Plotting topic model dendrogram"
