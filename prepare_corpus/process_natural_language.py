@@ -9,19 +9,34 @@ import codecs
 import os
 from itertools import chain
 import csv
+import argparse
+
+
+# Get command line information
+parser = argparse.ArgumentParser(description='Stem and create bigrams for a folder of plain text files.',
+                                formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('documents', type=str, 
+                    help='the path to the folder of exported documents')
+parser.add_argument('output_folder', type=str, 
+                    help='the path to save final stemmed text files')
+parser.add_argument('stopwords', type=argparse.FileType('r'), 
+                    help='a list of stopwords to remove')
+parser.add_argument('bigram_csv', type=argparse.FileType('wb'), 
+                    help='CSV of most common bigrams')
+args = parser.parse_args()
 
 
 #------------
 # Variables
 #------------
-# Mallet input files
-path_to_documents = "R/mallet_input/*"
-
-# Output folder
-output_folder = "R/mallet_stemmed"
+# Save arguments
+path_to_documents = os.path.abspath(args.documents) + "/*"  # Must have * for glob
+output_folder = os.path.abspath(args.output_folder)
+stopword_file = args.stopwords
+csv_path = args.bigram_csv
 
 # Load MALLET stopwords
-stopwords = set([word.strip() for word in open("R/stopwords.txt", "r")])  # Using set() speeds up "not in" searches
+stopwords = set([word.strip() for word in stopword_file])  # Using set() speeds up "not in" searches
 
 # Select the stemming algorithm
 stemmer = nltk.stem.snowball.EnglishStemmer()  # Newest, made by Porter in 2001(?)
@@ -143,7 +158,7 @@ bigrams_significant = [bigram for bigram in bigrams_likerat if bigram[1] > criti
 
 bigrams_out = [[bigram[1], bigram[0][0], bigram[0][1]] for bigram in bigrams_significant]
 
-with open('Output/bigrams.csv', 'wb') as csv_file:
+with csv_path as csv_file:
   csv_out = csv.writer(csv_file, delimiter=',', quoting=csv.QUOTE_ALL)
   csv_out.writerow(['-2LL', 'W1', 'W2'])
   for row in bigrams_out:
