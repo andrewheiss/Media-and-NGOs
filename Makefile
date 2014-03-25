@@ -1,14 +1,13 @@
 
 
-# build topic model
-# load data
-# make graphs and tables
-
 #--------------
 # Compilation
 #--------------
 articles: create_output Output/articles/*.txt Output/articles_control/*.txt
 process_articles: Output/articles_stemmed/*.txt Output/articles_stemmed/*.txt Output/bigrams.csv Output/bigrams_control.csv
+
+build_model: Output/topic_model.RData Output/topics.mallet Output/topic-state.gz Output/topic-keys.txt Output/topic-doctopics.txt Output/topic-docs.csv
+build_control_model: Output/topic_model_control.RData Output/topics_control.mallet Output/topic_control-state.gz Output/topic_control-keys.txt Output/topic_control-doctopics.txt Output/topic-docs_control.csv
 
 create_output: 
 	@#echo "Creating output folder structure..."
@@ -50,3 +49,14 @@ Output/media_data.RData: R/load_data.R
 	@echo "Loading NGO articles into R (this can take a while)..."
 	cd R; Rscript load_data.R
 
+
+#--------------------
+# Build topic model
+#--------------------
+Output/topic_model.RData Output/topics.mallet Output/topic-state.gz Output/topic-keys.txt Output/topic-doctopics.txt Output/topic-docs.csv: R/create_topic_model.R
+	@echo "Building topic model (this can take a while)..."
+	cd R; Rscript create_topic_model.R
+
+Output/topic_model_control.RData Output/topics_control.mallet Output/topic_control-state.gz Output/topic_control-keys.txt Output/topic_control-doctopics.txt Output/topic-docs_control.csv: R/create_topic_model.R
+	@echo "Building control topic model (this can take a while)..."
+	cd R; Rscript create_topic_model.R control

@@ -5,15 +5,18 @@
 # R version:      ≥3.0
 
 # Load libraries and set initial working directory
-library(reshape2)
-library(scales)
-library(plyr)
-library(pander)
+suppressPackageStartupMessages(library(reshape2))
+suppressPackageStartupMessages(library(scales))
+suppressPackageStartupMessages(library(plyr))
+suppressPackageStartupMessages(library(pander))
 
+# Process command line arguments
+source("get_args.R")  # Better handling of arguments
+args <- getArgs(defaults=list(control=FALSE))
+control = args$control
+
+# Set seed for MALLET
 mallet.seed <- 1234
-
-base.directory <- "~/Dropbox/Media and NGOs in the ME/Media and NGOs/R"
-setwd(base.directory)
 
 # Make sure MALLET is there
 if(!file.exists("mallet/bin/mallet")) {
@@ -24,24 +27,59 @@ if(!file.exists("mallet/bin/mallet")) {
 #------------------------
 # Create MALLET command
 #------------------------
-# Folder with input text files
-# TODO: Make this work with spaces. shQuote(file.path(importdir)) should work, but the quoted path breaks MALLET
-import.dir <- "mallet_stemmed"
+if(control == FALSE) {
+  # Folder with input text files
+  # TODO: Make this work with spaces. shQuote(file.path(importdir)) should work, but the quoted path breaks MALLET
+  import.dir <- "articles_stemmed"
 
-# Set names for output files 
-output.file <- "topics.mallet"  # MALLET data file
-output.state <-  "topic-state.gz"  # List of every word in every article and which topics they're assigned to
-output.topickeys <- "topic-keys.txt"  # List of the topics
-output.doctopics <- "topic-doctopics.txt"  # Proportion of each topic in each input file
+  # Set names for output files 
+  output.file <- "topics.mallet"  # MALLET data file
+  output.state <-  "topic-state.gz"  # List of every word in every article and which topics they're assigned to
+  output.topickeys <- "topic-keys.txt"  # List of the topics
+  output.doctopics <- "topic-doctopics.txt"  # Proportion of each topic in each input file
 
-# "Control" group of articles
-# import.dir <- "mallet_control_stemmed"
+  output.rdata <- "../Output/topic_model.RData"
+  output.csv <- "../Output/topic-docs.csv"
 
-# Set names for output files 
-# output.file <- "topics_control.mallet"  # MALLET data file
-# output.state <-  "topic-state_control.gz"  # List of every word in every article and which topics they're assigned to
-# output.topickeys <- "topic-keys_control.txt"  # List of the topics
-# output.doctopics <- "topic-doctopics_control.txt"  # Proportion of each topic in each input file
+  # SPSA short names
+  # short.names <- c("National government", "Draft constitution", "Environmental issues",
+  #                  "Development", "Police arrests", "Protests and clashes", 
+  #                  "Sexual violence", "Police torture", "Elections", "Human rights and civil society", 
+  #                  "Post-revolutionary Egypt", "Business and government", "Egyptian workers", 
+  #                  "Trials", "Religious issues", "Legislation", "Morsi and press freedom",
+  #                  "SCAF", "Youth in the street", "Christian issues")
+
+  # Shortnames for enhanced corpus (stemmed, n-grammed)
+  short.names <- c("Police torture", "Sexual violence", "Media and censorship", 
+                   "Sectarian issues", "Egyptian workers", "Religious issues", 
+                   "Police violence", "Business", "Protests and clashes", 
+                   "Muslim Brotherhood and constitution", "Elections", "Military trials", 
+                   "Legislation and governance", "Environmental issues", 
+                   "Human rights and civil society", "Protestors and activism", 
+                   "Public economics", "Police arrests", "Muslim Brotherhood and politics", 
+                   "Post-revolutionary Egypt (catch-all)")
+} else {
+  # "Control" group of articles
+  import.dir <- "articles_control_stemmed"
+
+  # Set names for output files 
+  output.file <- "topics_control.mallet"
+  output.state <-  "topic_control-state.gz"
+  output.topickeys <- "topic_control-keys.txt"
+  output.doctopics <- "topic_control-doctopics.txt"
+
+  output.rdata <- "../Output/topic_model_control.RData"
+  output.csv <- "../Output/topic-docs_control.csv"
+
+  # Control group short names
+  short.names <- c("Muslim Brotherhood and politics", "Morsi and the media", 
+                   "Miscellaneous", "Unions and strikes", "Trials", "Egypt (catch-all)", 
+                   "Religious issues", "Syrian civil war", "Cairo affairs", 
+                   "Israel-Palestinian conflict", "Protests", "Foreign affairs", 
+                   "Christian affairs", "Football", "Culture", "Regional violence", 
+                   "Tourism", "Oil", "Social affairs", "Public economics")
+}
+
 
 # Topic and optimization options
 num.topics <- 20  # Number of topics to model
@@ -51,12 +89,13 @@ optimize.interval <- 20  # Number of iterations between reestimating dirichlet h
 optimize.burnin <- 50  # Number of iterations to run before first estimating dirichlet hyperparameters
 
 # Finally, paste the commands together
-cd <- paste("cd", shQuote(normalizePath(base.directory)))
-import.command <- paste("mallet/bin/mallet", "import-dir", "--input", import.dir, 
+# cd <- paste("cd", shQuote(normalizePath(base.directory)))
+cd <- paste("cd", shQuote(normalizePath("../Output")))
+import.command <- paste("../R/mallet/bin/mallet", "import-dir", "--input", import.dir, 
                         "--output", output.file, 
                         "--keep-sequence", 
                         "--token-regex \"\\w+\"", sep=" ")  # token-regex will consider _ as part of the word
-train.command <- paste("mallet/bin/mallet", "train-topics", "--input", output.file,
+train.command <- paste("../R/mallet/bin/mallet", "train-topics", "--input", output.file,
                        "--num-iterations", num.iterations,
                        "--num-topics", num.topics,
                        "--num-top-words", num.top.words, 
@@ -76,8 +115,8 @@ system(mallet.command)
 # Parse the results
 #--------------------
 # Read the files created by MALLET
-topic.keys.result <- read.table(output.topickeys, header=F, sep="\t")
-doc.topics.result <- read.table(output.doctopics, header=F, sep="\t")
+topic.keys.result <- read.table(paste("../Output/", output.topickeys, sep=""), header=F, sep="\t")
+doc.topics.result <- read.table(paste("../Output/", output.doctopics, sep=""), header=F, sep="\t")
 
 # MAYBE: Make this *actually* look for (and remove?) the .DS_Store file?
 # if(nrow(doc.topics.result) != 515) {
@@ -128,7 +167,25 @@ normalize.topics <- function(x) {
 topic.docs <- data.frame(doc.topics)  # Regular
 topic.docs.norm <- normalize.topics(doc.topics)  # Normalized
 
+# Add short names to topics
+colnames(topic.keys.result) <- c("key", "dirichlet", "topic.words")
+topic.keys.result$short.names <- short.names
 
+
+#------------------
+# Save everything
+#------------------
+save(topic.keys.result, topic.docs, topic.docs.norm, file=output.rdata)
+
+# Export CSV of topic proportions in documents
+topic.docs.export <- topic.docs.norm
+colnames(topic.docs.export) <- short.names
+write.csv(x=topic.docs.export, file=output.csv, row.names=TRUE)
+
+
+#----------------------------------
+# Create example of normalization
+#----------------------------------
 # Example normalized table
 example.normal <- data.frame(topic1=c(0.5, 0.1, 0.5), topic2=c(0.0, 0.3, 0.3), topic3=c(0.5, 0.6, 0.2))
 rownames(example.normal) <- c("Article 1", "Article 2", "Article 3")
@@ -155,49 +212,3 @@ colnames(example.combined)[5] <- "→"
 cat(pandoc.table.return(example.combined, split.tables=Inf, 
                         justify="center", digits=2),
     file="../Output/table_norm_example.md")
-
-
-#-----------------------------
-# Add short names for topics
-#-----------------------------
-colnames(topic.keys.result) <- c("key", "dirichlet", "topic.words")
-# SPSA short names
-# short.names <- c("National government", "Draft constitution", "Environmental issues",
-#                  "Development", "Police arrests", "Protests and clashes", 
-#                  "Sexual violence", "Police torture", "Elections", "Human rights and civil society", 
-#                  "Post-revolutionary Egypt", "Business and government", "Egyptian workers", 
-#                  "Trials", "Religious issues", "Legislation", "Morsi and press freedom",
-#                  "SCAF", "Youth in the street", "Christian issues")
-
-# Shortnames for enhanced corpus (stemmed, n-grammed)
-short.names <- c("Police torture", "Sexual violence", "Media and censorship", 
-                 "Sectarian issues", "Egyptian workers", "Religious issues", 
-                 "Police violence", "Business", "Protests and clashes", 
-                 "Muslim Brotherhood and constitution", "Elections", "Military trials", 
-                 "Legislation and governance", "Environmental issues", 
-                 "Human rights and civil society", "Protestors and activism", 
-                 "Public economics", "Police arrests", "Muslim Brotherhood and politics", 
-                 "Post-revolutionary Egypt (catch-all)")
-topic.keys.result$short.names <- short.names
-
-# Control group short names
-# short.names <- c("Muslim Brotherhood and politics", "Morsi and the media", 
-#                  "Miscellaneous", "Unions and strikes", "Trials", "Egypt (catch-all)", 
-#                  "Religious issues", "Syrian civil war", "Cairo affairs", 
-#                  "Israel-Palestinian conflict", "Protests", "Foreign affairs", 
-#                  "Christian affairs", "Football", "Culture", "Regional violence", 
-#                  "Tourism", "Oil", "Social affairs", "Public economics")
-# topic.keys.result$short.names <- short.names
-
-
-#------------------
-# Save everything
-#------------------
-save(topic.keys.result, topic.docs, topic.docs.norm, file="topic_model.RData")
-# save(topic.keys.result, topic.docs, topic.docs.norm, file="topic_model_control.RData")
-
-# Export CSV of topic proportions in documents
-topic.docs.export <- topic.docs.norm
-colnames(topic.docs.export) <- short.names
-write.csv(x=topic.docs.export, file="../Output/topic-docs.csv", row.names=TRUE)
-# write.csv(x=topic.docs.export, file="../Output/topic-docs_control.csv", row.names=TRUE)
