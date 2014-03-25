@@ -1,16 +1,12 @@
 # Title:          load_data.R
 # Description:    Load all corpus data into R, clean it up, save as .RData file for later use
 # Author:         Andrew Heiss
-# Last updated:   2014-03-13
+# Last updated:   2014-03-25
 # R version:      ≥3.0
 
 # Load packages
-library(RSQLite)
-library(lubridate)
-
-# Set working directory
-base.directory <- "~/Dropbox/Media and NGOs in the ME/Media and NGOs/R"
-setwd(base.directory)
+suppressPackageStartupMessages(library(RSQLite))
+suppressPackageStartupMessages(library(lubridate))
 
 
 #--------------
@@ -86,4 +82,4 @@ dne.ngos <- subset(dne.articles, ngo.mention==TRUE)
 # Save for later
 #-----------------
 save(ngos, egind.articles, egind.ngos, ahram.articles, 
-     ahram.ngos, dne.articles, dne.ngos, file="media_data.RData", compress="gzip")
+     ahram.ngos, dne.articles, dne.ngos, file="../Output/media_data.RData", compress="gzip")

@@ -1,6 +1,5 @@
 
-# export articles from corpus
-# stem, etc. articles
+
 # build topic model
 # load data
 # make graphs and tables
@@ -14,10 +13,6 @@ process_articles: Output/articles_stemmed/*.txt Output/articles_stemmed/*.txt Ou
 create_output: 
 	@#echo "Creating output folder structure..."
 	@-mkdir Output 2>/dev/null || true
-	@#-mkdir Output/articles 2>/dev/null || true
-	@#-mkdir Output/articles_control 2>/dev/null || true
-	@#-mkdir Output/articles_stemmed 2>/dev/null || true
-	@#-mkdir Output/articles_control_stemmed 2>/dev/null || true
 
 
 #------------------------------
@@ -47,11 +42,11 @@ Output/articles_control/stemmed/*.txt Output/bigrams_control.csv: prepare_corpus
 	@-mkdir Output/articles_control_stemmed 2>/dev/null || true
 	python2 prepare_corpus/process_natural_language.py Output/articles_control/ Output/articles_control_stemmed prepare_corpus/stopwords.txt Output/bigrams_control.csv
 
-#---------
-# Tables
-#---------
 
+#----------
+# R stuff
+#----------
+Output/media_data.RData: R/load_data.R
+	@echo "Loading NGO articles into R (this can take a while)..."
+	cd R; Rscript load_data.R
 
-#--------
-# Plots
-#--------
