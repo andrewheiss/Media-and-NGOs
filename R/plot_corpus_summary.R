@@ -1,22 +1,18 @@
-# Title:          graphs.R
-# Description:    Make pretty graphs
+# Title:          plot_corpus_summary.R
+# Description:    Plot a summary of the three publications' NGO mentions over time
 # Author:         Andrew Heiss
-# Last updated:   2014-03-13
+# Last updated:   2014-03-25
 # R version:      ≥3.0
 
 # Load packages
-library(ggplot2)
-library(grid)
-library(plyr)
-library(scales)
-library(lubridate)
-
-# Set working directory
-base.directory <- "~/Dropbox/Media and NGOs in the ME/Media and NGOs/R"
-setwd(base.directory)
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(grid))
+suppressPackageStartupMessages(library(plyr))
+suppressPackageStartupMessages(library(scales))
+suppressPackageStartupMessages(library(lubridate))
 
 # Load corpus
-load("media_data.RData")
+load("../Output/media_data.RData")
 
 # Percent mentioning NGOs
 egind.prop <- nrow(egind.ngos) / nrow(egind.articles)
