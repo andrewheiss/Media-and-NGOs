@@ -1,4 +1,14 @@
+# Creating all the topic models, graphs, and tables for this project is
+# unfortunately a convoluted process, since there are so many moving parts
+# (Python 2, Python 3, MALLET, and R). This Makefile automates all those steps
+# so you don't have to. Hooray.
 
+# Here's a general outline of the process:
+#		1. export_articles: Export articles from SQLite databases into individual
+#			 plain text files (using Python 3) and stem the articles and find
+#			 significant bigrams (using NLTK with Python 2)
+#		3. model: Create topic models (using MALLET through R)
+#		4. output: Create tables and graphs of all that data (using R)
 
 #----------------
 # Phony targets
