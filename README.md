@@ -1,11 +1,35 @@
-## Whose Message Prevails? Independent Media Coverage of Anti-Corruption NGOs in Post-Revolutionary Egypt
+## Discovering Discourse: The Relationship between Media and NGOs in Egypt between 2011--13
 
-#### [Ken Rogerson](http://fds.duke.edu/db/Sanford/rogerson) and [Andrew Heiss](http://www.andrewheiss.com/) | Sanford School of Public Policy | Duke University
+[Ken Rogerson](http://fds.duke.edu/db/Sanford/rogerson) • Sanford School of Public Policy • Duke University  
+[Andrew Heiss](http://www.andrewheiss.com/) • Sanford School of Public Policy • Duke University
 
-------
+---
 
-### Abstract
+## Abstract
 
-In democratic societies, the relationship between social movements and the media is asymmetrical—movements need media but media do not necessarily need to cover social movements to be successful. To gain media support for their causes, movements change their message and reframe their causes to be more palatable for media audiences. Additionally, under autocratic regimes, opposition organizations and independent media must navigate enhanced government scrutiny. This project will focus on the relationship between independent media and the nonprofit sector in autocratic societies. 
+Forthcoming...
 
-Given the expected asymmetrical relationship between media and social movements, what is the relationship between independent media and civil society organizations in Egypt? How and under what conditions does media coverage of NGO activities differ? To answer these questions, we will examine the case of Egypt Independent, a non-state English-language news outlet which covered Egyptian politics and society until 2013. From a list of NGOs that were created to monitor government corruption, we will perform content analysis of the Independent's coverage of corruption-related events—such as Hosni Mubarak's ongoing criminal trial, and others—examining the use of anti-corruption NGOs as news sources and determining which NGO messages are most salient.
+
+## Data
+
+The data for this project consists of all articles published by [Al-Ahram English](http://english.ahram.org.eg/), [Daily News Egypt](http://www.dailynewsegypt.com/), and [Egypt Independent](http://www.egyptindependent.com/) between November 24, 2011 and April 25, 2013. We essentially used multiple virtual private servers to download local mirrors of their sites using a combination of [`httrack`](http://www.httrack.com/) and `wget`, and then used [BeautifulSoup](http://www.crummy.com/software/BeautifulSoup/) in Python to extract all the data into an SQLite database. 
+
+For the sake of transparency, the files for scraping and parsing are in `parse_raw_html/`. However, because the whole process took weeks (and a lot of manual corrections), none of those files are included in the `Makefile`. Instead, the `Makefile` assumes you have copies of the complete, clean SQLite corpora. 
+
+Because the corpora are fairly large (160–500 MB), and because of potentially murky intellectual property issues, we have not included them in this repository. If you are interested in replicating, extending, or playing around with this project, contact [Andrew Heiss](mailto:andrew.heiss@duke.edu) to get access to the corpora.
+
+
+## Usage
+
+Forthcoming...
+
+
+## Prerequisites
+
+### OS X and Linux
+
+Forthcoming...
+
+### Windows
+
+Forthcoming...
