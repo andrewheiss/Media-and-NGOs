@@ -3,6 +3,8 @@
 #----------------
 # Phony targets
 #----------------
+.PHONY: create_output export_articles articles process_articles model build_model build_control_model output plots tables validation all
+
 create_output: 
 	@-mkdir Output 2>/dev/null || true
 
